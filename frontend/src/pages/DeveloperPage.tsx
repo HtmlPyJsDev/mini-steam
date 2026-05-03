@@ -9,32 +9,11 @@ import { useAuth } from '../context/AuthContext';
 import { useTranslation } from '../i18n/I18nContext';
 import {
   getDeveloperSlot,
-  presignDeveloperGameFile,
+  uploadDeveloperGameFile,
   createDeveloperGame,
 } from '../api/developer';
+import type { UploadProgress } from '../api/multipartUpload';
 import type { Game } from '../types';
-
-interface Progress {
-  kind: 'idle' | 'presigning' | 'uploading' | 'finalizing';
-  loaded?: number;
-  total?: number;
-}
-
-function putToR2(url: string, file: File, onProgress: (loaded: number, total: number) => void): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open('PUT', url, true);
-    xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
-    xhr.upload.onprogress = (e) => {
-      if (e.lengthComputable) onProgress(e.loaded, e.total);
-    };
-    xhr.onload = () =>
-      xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new Error(`R2 upload failed: ${xhr.status}`));
-    xhr.onerror = () => reject(new Error('R2 upload network error'));
-    xhr.onabort = () => reject(new Error('R2 upload aborted'));
-    xhr.send(file);
-  });
-}
 
 export function DeveloperPage() {
   const { user } = useAuth();
@@ -49,7 +28,7 @@ export function DeveloperPage() {
   const [cover, setCover] = useState<File | null>(null);
   const [screenshots, setScreenshots] = useState<File[]>([]);
   const [gameFile, setGameFile] = useState<File | null>(null);
-  const [progress, setProgress] = useState<Progress>({ kind: 'idle' });
+  const [progress, setProgress] = useState<UploadProgress>({ kind: 'idle' });
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -93,15 +72,7 @@ export function DeveloperPage() {
     }
     setSubmitting(true);
     try {
-      setProgress({ kind: 'presigning' });
-      const presigned = await presignDeveloperGameFile(
-        gameFile.name,
-        gameFile.type || 'application/octet-stream'
-      );
-      setProgress({ kind: 'uploading', loaded: 0, total: gameFile.size });
-      await putToR2(presigned.uploadUrl, gameFile, (loaded, total) =>
-        setProgress({ kind: 'uploading', loaded, total })
-      );
+      const resolved = await uploadDeveloperGameFile(gameFile, setProgress);
       setProgress({ kind: 'finalizing' });
       const res = await createDeveloperGame({
         title: title.trim(),
@@ -109,9 +80,9 @@ export function DeveloperPage() {
         license: license.trim(),
         cover,
         screenshots,
-        gameFileKey: presigned.key,
-        gameFileUrl: presigned.publicUrl,
-        gameFileSize: gameFile.size,
+        gameFileKey: resolved.key,
+        gameFileUrl: resolved.url,
+        gameFileSize: resolved.size,
       });
       setGame(res.game);
       setSlotUsed(true);

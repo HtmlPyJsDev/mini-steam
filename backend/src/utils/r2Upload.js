@@ -4,6 +4,10 @@ const {
   PutObjectCommand,
   DeleteObjectCommand,
   GetObjectCommand,
+  CreateMultipartUploadCommand,
+  CompleteMultipartUploadCommand,
+  AbortMultipartUploadCommand,
+  UploadPartCommand,
 } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 
@@ -95,10 +99,80 @@ async function getPresignedPutUrl({ key, contentType, ttlSeconds = 3600 }) {
   };
 }
 
+async function createMultipartUpload({ key, contentType }) {
+  const cfg = getR2Config();
+  const client = getR2Client();
+  const out = await client.send(
+    new CreateMultipartUploadCommand({
+      Bucket: cfg.bucket,
+      Key: key,
+      ContentType: contentType || 'application/octet-stream',
+    })
+  );
+  return {
+    uploadId: out.UploadId,
+    key,
+  };
+}
+
+async function getPresignedPartUrls({ key, uploadId, partNumbers, ttlSeconds = 3600 }) {
+  const cfg = getR2Config();
+  const client = getR2Client();
+  const urls = [];
+  for (const partNumber of partNumbers) {
+    const url = await getSignedUrl(
+      client,
+      new UploadPartCommand({
+        Bucket: cfg.bucket,
+        Key: key,
+        UploadId: uploadId,
+        PartNumber: partNumber,
+      }),
+      { expiresIn: ttlSeconds }
+    );
+    urls.push({ partNumber, url });
+  }
+  return urls;
+}
+
+async function completeMultipartUpload({ key, uploadId, parts }) {
+  const cfg = getR2Config();
+  const client = getR2Client();
+  const sorted = [...parts].sort((a, b) => a.PartNumber - b.PartNumber);
+  await client.send(
+    new CompleteMultipartUploadCommand({
+      Bucket: cfg.bucket,
+      Key: key,
+      UploadId: uploadId,
+      MultipartUpload: { Parts: sorted },
+    })
+  );
+  return {
+    key,
+    publicUrl: cfg.publicBaseUrl ? `${cfg.publicBaseUrl.replace(/\/$/, '')}/${key}` : '',
+  };
+}
+
+async function abortMultipartUpload({ key, uploadId }) {
+  const cfg = getR2Config();
+  const client = getR2Client();
+  await client.send(
+    new AbortMultipartUploadCommand({
+      Bucket: cfg.bucket,
+      Key: key,
+      UploadId: uploadId,
+    })
+  );
+}
+
 module.exports = {
   buildKey,
   uploadBufferToR2,
   deleteFromR2,
   getDownloadUrl,
   getPresignedPutUrl,
+  createMultipartUpload,
+  getPresignedPartUrls,
+  completeMultipartUpload,
+  abortMultipartUpload,
 };

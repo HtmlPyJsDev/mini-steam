@@ -10,7 +10,12 @@ const {
   buildKey,
   uploadBufferToR2,
   getPresignedPutUrl,
+  createMultipartUpload,
+  getPresignedPartUrls,
+  completeMultipartUpload,
+  abortMultipartUpload,
 } = require('../utils/r2Upload');
+const { getR2Config } = require('../config/r2');
 
 const router = express.Router();
 
@@ -55,6 +60,99 @@ router.post(
       ttlSeconds: 3600,
     });
     return res.json(presigned);
+  })
+);
+
+router.post(
+  '/uploads/game-file/multipart/init',
+  express.json(),
+  asyncHandler(async (req, res) => {
+    if (req.user.developerGameId) {
+      return res
+        .status(409)
+        .json({ message: 'Developer slot already used. You can only publish one game.' });
+    }
+    const { filename, contentType } = req.body || {};
+    if (!filename || typeof filename !== 'string') {
+      return res.status(400).json({ message: 'filename is required' });
+    }
+    if (!GAME_FILE_EXTENSIONS.test(filename)) {
+      return res.status(400).json({
+        message:
+          'Unsupported game file extension. Allowed: zip, rar, 7z, tar, gz, tgz, exe, msi, appimage, dmg, deb, pkg, iso',
+      });
+    }
+    const cfg = getR2Config();
+    const key = buildKey('games', filename);
+    const { uploadId } = await createMultipartUpload({
+      key,
+      contentType: typeof contentType === 'string' ? contentType : 'application/octet-stream',
+    });
+    return res.json({
+      key,
+      uploadId,
+      publicUrl: cfg.publicBaseUrl ? `${cfg.publicBaseUrl.replace(/\/$/, '')}/${key}` : '',
+    });
+  })
+);
+
+router.post(
+  '/uploads/game-file/multipart/sign',
+  express.json(),
+  asyncHandler(async (req, res) => {
+    const { key, uploadId, partNumbers } = req.body || {};
+    if (!key || !uploadId || !Array.isArray(partNumbers) || partNumbers.length === 0) {
+      return res.status(400).json({ message: 'key, uploadId, partNumbers[] are required' });
+    }
+    const nums = partNumbers
+      .map((n) => Number(n))
+      .filter((n) => Number.isInteger(n) && n >= 1 && n <= 10000);
+    if (nums.length === 0) {
+      return res.status(400).json({ message: 'partNumbers must be 1..10000 integers' });
+    }
+    if (nums.length > 100) {
+      return res.status(400).json({ message: 'Too many partNumbers in one request (max 100)' });
+    }
+    const urls = await getPresignedPartUrls({ key, uploadId, partNumbers: nums, ttlSeconds: 3600 });
+    return res.json({ urls });
+  })
+);
+
+router.post(
+  '/uploads/game-file/multipart/complete',
+  express.json(),
+  asyncHandler(async (req, res) => {
+    const { key, uploadId, parts } = req.body || {};
+    if (!key || !uploadId || !Array.isArray(parts) || parts.length === 0) {
+      return res.status(400).json({ message: 'key, uploadId, parts[] are required' });
+    }
+    const cleaned = parts
+      .map((p) => ({
+        PartNumber: Number(p?.partNumber ?? p?.PartNumber),
+        ETag: String(p?.eTag ?? p?.ETag ?? '').trim(),
+      }))
+      .filter((p) => Number.isInteger(p.PartNumber) && p.ETag);
+    if (cleaned.length === 0) {
+      return res.status(400).json({ message: 'parts must have partNumber and eTag' });
+    }
+    const result = await completeMultipartUpload({ key, uploadId, parts: cleaned });
+    return res.json(result);
+  })
+);
+
+router.post(
+  '/uploads/game-file/multipart/abort',
+  express.json(),
+  asyncHandler(async (req, res) => {
+    const { key, uploadId } = req.body || {};
+    if (!key || !uploadId) return res.status(400).json({ message: 'key, uploadId required' });
+    try {
+      await abortMultipartUpload({ key, uploadId });
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.warn('[mini-steam] abort multipart failed:', err.message);
+    }
+    return res.json({ ok: true });
   })
 );
 

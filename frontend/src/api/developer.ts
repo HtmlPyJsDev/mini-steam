@@ -1,24 +1,28 @@
 import { apiRequest, API_URL, getToken } from './client';
+import {
+  uploadGameFileSmart,
+  type ProgressListener,
+  type ResolvedFile,
+} from './multipartUpload';
 import type { Game } from '../types';
-
-export interface PresignResponse {
-  uploadUrl: string;
-  key: string;
-  publicUrl: string;
-}
 
 export function getDeveloperSlot(): Promise<{ slotUsed: boolean; game: Game | null }> {
   return apiRequest<{ slotUsed: boolean; game: Game | null }>('/developer/me', { auth: true });
 }
 
-export function presignDeveloperGameFile(
-  filename: string,
-  contentType: string
-): Promise<PresignResponse> {
-  return apiRequest<PresignResponse>('/developer/uploads/game-file/presign', {
-    method: 'POST',
-    body: { filename, contentType },
-    auth: true,
+export function uploadDeveloperGameFile(
+  file: File,
+  onProgress?: ProgressListener
+): Promise<ResolvedFile> {
+  return uploadGameFileSmart(file, {
+    presignPath: '/developer/uploads/game-file/presign',
+    multipartPaths: {
+      init: '/developer/uploads/game-file/multipart/init',
+      sign: '/developer/uploads/game-file/multipart/sign',
+      complete: '/developer/uploads/game-file/multipart/complete',
+      abort: '/developer/uploads/game-file/multipart/abort',
+    },
+    onProgress,
   });
 }
 

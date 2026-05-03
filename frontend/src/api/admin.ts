@@ -1,4 +1,5 @@
 import { apiRequest } from './client';
+import { uploadGameFileSmart, type ProgressListener, type UploadProgress } from './multipartUpload';
 import type { Game, User, UserRole } from '../types';
 
 export interface AdminGamePayload {
@@ -10,57 +11,7 @@ export interface AdminGamePayload {
   gameFile?: File | null;
 }
 
-export interface PresignedUpload {
-  uploadUrl: string;
-  key: string;
-  publicUrl: string;
-}
-
-export type UploadProgress =
-  | { kind: 'idle' }
-  | { kind: 'presigning' }
-  | { kind: 'uploading'; loaded: number; total: number }
-  | { kind: 'finalizing' };
-
-export type ProgressListener = (progress: UploadProgress) => void;
-
-function presignGameFile(file: File): Promise<PresignedUpload> {
-  return apiRequest<PresignedUpload>('/admin/uploads/game-file/presign', {
-    method: 'POST',
-    body: {
-      filename: file.name,
-      contentType: file.type || 'application/octet-stream',
-    },
-    auth: true,
-  });
-}
-
-function putToR2WithProgress(
-  url: string,
-  file: File,
-  onProgress?: ProgressListener
-): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open('PUT', url, true);
-    xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
-    xhr.upload.onprogress = (event) => {
-      if (event.lengthComputable && onProgress) {
-        onProgress({ kind: 'uploading', loaded: event.loaded, total: event.total });
-      }
-    };
-    xhr.onload = () => {
-      if (xhr.status >= 200 && xhr.status < 300) {
-        resolve();
-      } else {
-        reject(new Error(`R2 upload failed: HTTP ${xhr.status} ${xhr.statusText || ''}`.trim()));
-      }
-    };
-    xhr.onerror = () => reject(new Error('R2 upload failed: network error'));
-    xhr.onabort = () => reject(new Error('R2 upload aborted'));
-    xhr.send(file);
-  });
-}
+export type { UploadProgress, ProgressListener };
 
 interface ResolvedGameFile {
   key: string;
@@ -72,14 +23,16 @@ async function uploadGameFile(
   file: File,
   onProgress?: ProgressListener
 ): Promise<ResolvedGameFile> {
-  onProgress?.({ kind: 'presigning' });
-  const presigned = await presignGameFile(file);
-  await putToR2WithProgress(presigned.uploadUrl, file, onProgress);
-  return {
-    key: presigned.key,
-    url: presigned.publicUrl,
-    size: file.size,
-  };
+  return uploadGameFileSmart(file, {
+    presignPath: '/admin/uploads/game-file/presign',
+    multipartPaths: {
+      init: '/admin/uploads/game-file/multipart/init',
+      sign: '/admin/uploads/game-file/multipart/sign',
+      complete: '/admin/uploads/game-file/multipart/complete',
+      abort: '/admin/uploads/game-file/multipart/abort',
+    },
+    onProgress,
+  });
 }
 
 function buildFormData(
