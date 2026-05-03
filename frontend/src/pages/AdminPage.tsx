@@ -6,9 +6,26 @@ import {
   type FormEvent,
 } from 'react';
 import { listGames } from '../api/games';
-import { createGame, deleteGame, updateGame, type AdminGamePayload } from '../api/admin';
+import {
+  createGame,
+  deleteGame,
+  updateGame,
+  type AdminGamePayload,
+  type UploadProgress,
+} from '../api/admin';
 import type { Game } from '../types';
 import { Loader } from '../components/Loader';
+
+function formatProgress(p: UploadProgress): string {
+  if (p.kind === 'presigning') return 'Requesting upload URL…';
+  if (p.kind === 'uploading') {
+    const pct = p.total > 0 ? Math.round((p.loaded / p.total) * 100) : 0;
+    const mb = (n: number) => (n / (1024 * 1024)).toFixed(1);
+    return `Uploading game file to R2: ${pct}% (${mb(p.loaded)} / ${mb(p.total)} MB)`;
+  }
+  if (p.kind === 'finalizing') return 'Saving game metadata…';
+  return '';
+}
 
 interface FormState {
   title: string;
@@ -33,6 +50,7 @@ export function AdminPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [submitting, setSubmitting] = useState(false);
+  const [progress, setProgress] = useState<UploadProgress>({ kind: 'idle' });
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
@@ -112,12 +130,13 @@ export function AdminPage() {
     };
 
     setSubmitting(true);
+    setProgress({ kind: 'idle' });
     try {
       if (isEditing && editingId) {
-        await updateGame(editingId, payload);
+        await updateGame(editingId, payload, setProgress);
         setSuccess('Game updated');
       } else {
-        await createGame(payload);
+        await createGame(payload, setProgress);
         setSuccess('Game created');
       }
       resetForm();
@@ -126,6 +145,7 @@ export function AdminPage() {
       setError(err instanceof Error ? err.message : 'Save failed');
     } finally {
       setSubmitting(false);
+      setProgress({ kind: 'idle' });
     }
   }
 
@@ -214,6 +234,20 @@ export function AdminPage() {
             />
             {form.gameFile ? <small>Selected: {form.gameFile.name}</small> : null}
           </label>
+
+          {progress.kind !== 'idle' ? (
+            <div className="progress-banner">
+              <span>{formatProgress(progress)}</span>
+              {progress.kind === 'uploading' && progress.total > 0 ? (
+                <div className="progress-bar">
+                  <div
+                    className="progress-bar__fill"
+                    style={{ width: `${Math.min(100, Math.round((progress.loaded / progress.total) * 100))}%` }}
+                  />
+                </div>
+              ) : null}
+            </div>
+          ) : null}
 
           {error ? <div className="error-banner">{error}</div> : null}
           {success ? <div className="success-banner">{success}</div> : null}

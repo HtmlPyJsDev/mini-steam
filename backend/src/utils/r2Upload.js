@@ -72,9 +72,33 @@ async function getDownloadUrl(key) {
   );
 }
 
+async function getPresignedPutUrl({ key, contentType, ttlSeconds = 3600 }) {
+  const cfg = getR2Config();
+  const client = getR2Client();
+
+  const uploadUrl = await getSignedUrl(
+    client,
+    new PutObjectCommand({
+      Bucket: cfg.bucket,
+      Key: key,
+      ContentType: contentType || 'application/octet-stream',
+    }),
+    { expiresIn: ttlSeconds }
+  );
+
+  return {
+    uploadUrl,
+    key,
+    publicUrl: cfg.publicBaseUrl
+      ? `${cfg.publicBaseUrl.replace(/\/$/, '')}/${key}`
+      : '',
+  };
+}
+
 module.exports = {
   buildKey,
   uploadBufferToR2,
   deleteFromR2,
   getDownloadUrl,
+  getPresignedPutUrl,
 };

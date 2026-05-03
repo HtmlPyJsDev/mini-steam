@@ -15,7 +15,7 @@ export function Navbar() {
       <div className="navbar__inner">
         <Link to="/" className="navbar__brand">
           <span className="navbar__brand-mark">▶</span>
-          <span>Mini Steam</span>
+          <span>Uzisoft</span>
         </Link>
 
         <nav className="navbar__links">

@@ -49,7 +49,7 @@ export function App() {
       <footer className="app-footer">
         <div className="container app-footer__inner">
           <p>
-            Mini Steam · A catalog for legally free and open-source games. Only games whose
+            Uzisoft · A catalog for legally free and open-source games. Only games whose
             license permits free redistribution are listed.
           </p>
         </div>

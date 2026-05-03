@@ -4,16 +4,19 @@ const Game = require('../models/Game');
 const auth = require('../middleware/auth');
 const admin = require('../middleware/admin');
 const asyncHandler = require('../utils/asyncHandler');
-const { gameUpload } = require('../middleware/upload');
+const { gameImagesUpload } = require('../middleware/upload');
 const {
   buildKey,
   uploadBufferToR2,
   deleteFromR2,
+  getPresignedPutUrl,
 } = require('../utils/r2Upload');
 
 const router = express.Router();
 
 router.use(auth, admin);
+
+const GAME_FILE_EXTENSIONS = /\.(zip|rar|7z|tar|gz|tgz|exe|msi|appimage|dmg|deb|pkg|iso)$/i;
 
 function requireFields(body, fields) {
   const missing = fields.filter((f) => !body[f] || String(body[f]).trim() === '');
@@ -44,31 +47,47 @@ async function uploadScreenshot(file) {
   return { key, url: publicUrl };
 }
 
-async function uploadGameFile(file) {
-  const key = buildKey('games', file.originalname);
-  const { publicUrl } = await uploadBufferToR2({
-    buffer: file.buffer,
-    key,
-    contentType: file.mimetype,
-  });
-  return { key, url: publicUrl, size: file.size };
-}
+router.post(
+  '/uploads/game-file/presign',
+  express.json(),
+  asyncHandler(async (req, res) => {
+    const { filename, contentType } = req.body || {};
+    if (!filename || typeof filename !== 'string') {
+      return res.status(400).json({ message: 'filename is required' });
+    }
+    if (!GAME_FILE_EXTENSIONS.test(filename)) {
+      return res.status(400).json({
+        message:
+          'Unsupported game file extension. Allowed: zip, rar, 7z, tar, gz, tgz, exe, msi, appimage, dmg, deb, pkg, iso',
+      });
+    }
+    const key = buildKey('games', filename);
+    const presigned = await getPresignedPutUrl({
+      key,
+      contentType: typeof contentType === 'string' ? contentType : 'application/octet-stream',
+      ttlSeconds: 3600,
+    });
+    return res.json(presigned);
+  })
+);
 
 router.post(
   '/games',
-  gameUpload,
+  gameImagesUpload,
   asyncHandler(async (req, res) => {
-    requireFields(req.body, ['title', 'description', 'license']);
+    requireFields(req.body, [
+      'title',
+      'description',
+      'license',
+      'gameFileKey',
+      'gameFileUrl',
+    ]);
 
     const coverFile = req.files && req.files.cover && req.files.cover[0];
-    const gameFile = req.files && req.files.gameFile && req.files.gameFile[0];
     const screenshotFiles = (req.files && req.files.screenshots) || [];
 
     if (!coverFile) {
       return res.status(400).json({ message: 'Cover image is required (field: cover)' });
-    }
-    if (!gameFile) {
-      return res.status(400).json({ message: 'Game file is required (field: gameFile)' });
     }
 
     const cover = await uploadCover(coverFile);
@@ -77,7 +96,12 @@ router.post(
       const s = await uploadScreenshot(f);
       screenshots.push(s.url);
     }
-    const fileUpload = await uploadGameFile(gameFile);
+
+    const sizeRaw = req.body.gameFileSize;
+    const size = sizeRaw === undefined || sizeRaw === '' ? 0 : Number(sizeRaw);
+    if (!Number.isFinite(size) || size < 0) {
+      return res.status(400).json({ message: 'gameFileSize must be a non-negative number' });
+    }
 
     const game = await Game.create({
       title: String(req.body.title).trim(),
@@ -85,9 +109,9 @@ router.post(
       license: String(req.body.license).trim(),
       coverUrl: cover.url,
       screenshots,
-      fileUrl: fileUpload.url,
-      fileKey: fileUpload.key,
-      size: fileUpload.size,
+      fileUrl: String(req.body.gameFileUrl).trim(),
+      fileKey: String(req.body.gameFileKey).trim(),
+      size,
     });
 
     return res.status(201).json({ game });
@@ -96,7 +120,7 @@ router.post(
 
 router.put(
   '/games/:id',
-  gameUpload,
+  gameImagesUpload,
   asyncHandler(async (req, res) => {
     const game = await Game.findById(req.params.id);
     if (!game) {
@@ -115,7 +139,6 @@ router.put(
 
     const coverFile = req.files && req.files.cover && req.files.cover[0];
     const screenshotFiles = (req.files && req.files.screenshots) || [];
-    const gameFile = req.files && req.files.gameFile && req.files.gameFile[0];
 
     if (coverFile) {
       const cover = await uploadCover(coverFile);
@@ -131,13 +154,19 @@ router.put(
       game.screenshots = newShots;
     }
 
-    if (gameFile) {
+    if (req.body.gameFileKey && req.body.gameFileUrl) {
       const oldKey = game.fileKey;
-      const fileUpload = await uploadGameFile(gameFile);
-      game.fileUrl = fileUpload.url;
-      game.fileKey = fileUpload.key;
-      game.size = fileUpload.size;
-      if (oldKey && oldKey !== fileUpload.key) {
+      const newKey = String(req.body.gameFileKey).trim();
+      const newUrl = String(req.body.gameFileUrl).trim();
+      const sizeRaw = req.body.gameFileSize;
+      const size = sizeRaw === undefined || sizeRaw === '' ? game.size : Number(sizeRaw);
+      if (!Number.isFinite(size) || size < 0) {
+        return res.status(400).json({ message: 'gameFileSize must be a non-negative number' });
+      }
+      game.fileUrl = newUrl;
+      game.fileKey = newKey;
+      game.size = size;
+      if (oldKey && oldKey !== newKey) {
         try {
           await deleteFromR2(oldKey);
         } catch (err) {
