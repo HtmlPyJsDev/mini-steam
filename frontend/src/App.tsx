@@ -7,6 +7,10 @@ import { GamePage } from './pages/GamePage';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { ProfilePage } from './pages/ProfilePage';
+import { PublicProfilePage } from './pages/PublicProfilePage';
+import { FriendsPage } from './pages/FriendsPage';
+import { ChatPage } from './pages/ChatPage';
+import { DeveloperPage } from './pages/DeveloperPage';
 import { AdminPage } from './pages/AdminPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { useTranslation } from './i18n/I18nContext';
@@ -28,6 +32,46 @@ export function App() {
             element={
               <ProtectedRoute>
                 <ProfilePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/u/:id"
+            element={
+              <ProtectedRoute>
+                <PublicProfilePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/friends"
+            element={
+              <ProtectedRoute>
+                <FriendsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/chat"
+            element={
+              <ProtectedRoute>
+                <ChatPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/chat/:id"
+            element={
+              <ProtectedRoute>
+                <ChatPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/developer"
+            element={
+              <ProtectedRoute>
+                <DeveloperPage />
               </ProtectedRoute>
             }
           />

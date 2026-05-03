@@ -5,15 +5,26 @@ import {
   type ChangeEvent,
   type FormEvent,
 } from 'react';
+import { Link } from 'react-router-dom';
 import { listGames } from '../api/games';
 import {
   createGame,
   deleteGame,
   updateGame,
+  listUsers,
+  setUserRole,
+  banUser,
+  unbanUser,
+  listPendingGames,
+  setGameStatus,
   type AdminGamePayload,
   type UploadProgress,
 } from '../api/admin';
-import type { Game } from '../types';
+import { useAuth } from '../context/AuthContext';
+import { useTranslation } from '../i18n/I18nContext';
+import { Avatar } from '../components/Avatar';
+import { RolePill } from '../components/RolePill';
+import type { Game, User, UserRole } from '../types';
 import { Loader } from '../components/Loader';
 
 function formatProgress(p: UploadProgress): string {
@@ -45,7 +56,49 @@ const EMPTY_FORM: FormState = {
   gameFile: null,
 };
 
+type Tab = 'games' | 'pending' | 'users';
+
 export function AdminPage() {
+  const { user: me } = useAuth();
+  const { t } = useTranslation();
+  const [tab, setTab] = useState<Tab>('games');
+
+  return (
+    <div className="container">
+      <h1 className="admin__title">Admin · Uzisoft</h1>
+
+      <div className="admin__tabs">
+        <button
+          type="button"
+          className={`admin__tab${tab === 'games' ? ' is-active' : ''}`}
+          onClick={() => setTab('games')}
+        >
+          {t('admin.tabsGames')}
+        </button>
+        <button
+          type="button"
+          className={`admin__tab${tab === 'pending' ? ' is-active' : ''}`}
+          onClick={() => setTab('pending')}
+        >
+          {t('admin.tabsPending')}
+        </button>
+        <button
+          type="button"
+          className={`admin__tab${tab === 'users' ? ' is-active' : ''}`}
+          onClick={() => setTab('users')}
+        >
+          {t('admin.tabsUsers')}
+        </button>
+      </div>
+
+      {tab === 'games' ? <GamesTab /> : null}
+      {tab === 'pending' ? <PendingTab /> : null}
+      {tab === 'users' ? <UsersTab meId={me?._id} /> : null}
+    </div>
+  );
+}
+
+function GamesTab() {
   const [games, setGames] = useState<Game[] | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
@@ -93,7 +146,10 @@ export function AdminPage() {
   }
 
   async function handleDelete(id: string) {
-    if (typeof window !== 'undefined' && !window.confirm('Delete this game? The file in R2 will also be removed.')) {
+    if (
+      typeof window !== 'undefined' &&
+      !window.confirm('Delete this game? The file in R2 will also be removed.')
+    ) {
       return;
     }
     try {
@@ -160,9 +216,7 @@ export function AdminPage() {
   }
 
   return (
-    <div className="container">
-      <h1 className="admin__title">Admin · Games</h1>
-
+    <>
       <section className="admin__form-card">
         <header className="admin__form-header">
           <h2>{isEditing ? 'Edit game' : 'Add a new game'}</h2>
@@ -206,9 +260,7 @@ export function AdminPage() {
           </label>
 
           <label className="field">
-            <span>
-              Cover image {isEditing ? <em>(optional — upload to replace)</em> : null}
-            </span>
+            <span>Cover image {isEditing ? <em>(optional — upload to replace)</em> : null}</span>
             <input type="file" accept="image/*" onChange={onCoverChange} />
             {form.cover ? <small>Selected: {form.cover.name}</small> : null}
           </label>
@@ -224,9 +276,7 @@ export function AdminPage() {
           </label>
 
           <label className="field">
-            <span>
-              Game file {isEditing ? <em>(optional — upload to replace)</em> : null}
-            </span>
+            <span>Game file {isEditing ? <em>(optional — upload to replace)</em> : null}</span>
             <input
               type="file"
               accept=".zip,.rar,.7z,.tar,.gz,.tgz,.exe,.msi,.appimage,.dmg,.deb,.pkg,.iso"
@@ -242,7 +292,9 @@ export function AdminPage() {
                 <div className="progress-bar">
                   <div
                     className="progress-bar__fill"
-                    style={{ width: `${Math.min(100, Math.round((progress.loaded / progress.total) * 100))}%` }}
+                    style={{
+                      width: `${Math.min(100, Math.round((progress.loaded / progress.total) * 100))}%`,
+                    }}
                   />
                 </div>
               ) : null}
@@ -277,6 +329,11 @@ export function AdminPage() {
                   <div>
                     <h3>{g.title}</h3>
                     <p className="admin__game-license">{g.license}</p>
+                    {g.status && g.status !== 'approved' ? (
+                      <span className={`badge badge--${g.status === 'pending' ? '' : 'danger'}`}>
+                        {g.status}
+                      </span>
+                    ) : null}
                   </div>
                 </div>
                 <div className="admin__game-actions">
@@ -296,6 +353,243 @@ export function AdminPage() {
           </ul>
         )}
       </section>
-    </div>
+    </>
+  );
+}
+
+function PendingTab() {
+  const { t } = useTranslation();
+  const [games, setGames] = useState<Game[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  async function load() {
+    try {
+      const res = await listPendingGames();
+      setGames(res.games);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('common.error'));
+      setGames([]);
+    }
+  }
+
+  useEffect(() => {
+    void load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function decide(id: string, status: 'approved' | 'rejected') {
+    setBusy(true);
+    try {
+      await setGameStatus(id, status);
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('common.error'));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section className="admin__list">
+      <h2>{t('admin.pendingTitle')}</h2>
+      {error ? <div className="error-banner">{error}</div> : null}
+      {games === null ? (
+        <Loader label={t('common.loading')} />
+      ) : games.length === 0 ? (
+        <div className="empty-state">{t('admin.pendingEmpty')}</div>
+      ) : (
+        <ul className="admin__games">
+          {games.map((g) => (
+            <li key={g._id} className="admin__game">
+              <div className="admin__game-info">
+                {g.coverUrl ? (
+                  <img src={g.coverUrl} alt={g.title} />
+                ) : (
+                  <div className="admin__game-placeholder">No cover</div>
+                )}
+                <div>
+                  <h3>{g.title}</h3>
+                  <p className="admin__game-license">{g.license}</p>
+                  {typeof g.uploaderId === 'object' && g.uploaderId ? (
+                    <p>
+                      <Link to={`/u/${g.uploaderId._id}`}>{g.uploaderId.email}</Link>
+                    </p>
+                  ) : null}
+                </div>
+              </div>
+              <div className="admin__game-actions">
+                <button
+                  type="button"
+                  className="btn btn--primary"
+                  disabled={busy}
+                  onClick={() => decide(g._id, 'approved')}
+                >
+                  {t('admin.approve')}
+                </button>
+                <button
+                  type="button"
+                  className="btn btn--danger"
+                  disabled={busy}
+                  onClick={() => decide(g._id, 'rejected')}
+                >
+                  {t('admin.reject')}
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+function UsersTab({ meId }: { meId?: string }) {
+  const { t } = useTranslation();
+  const [users, setUsers] = useState<User[] | null>(null);
+  const [query, setQuery] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  async function load(q?: string) {
+    try {
+      const res = await listUsers(q);
+      setUsers(res.users);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('common.error'));
+      setUsers([]);
+    }
+  }
+
+  useEffect(() => {
+    void load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    const id = setTimeout(() => {
+      void load(query.trim() || undefined);
+    }, 250);
+    return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query]);
+
+  async function changeRole(id: string, role: UserRole) {
+    if (typeof window !== 'undefined' && !window.confirm(t('admin.changeRoleConfirm'))) return;
+    setBusy(true);
+    try {
+      await setUserRole(id, role);
+      await load(query.trim() || undefined);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('common.error'));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function ban(id: string) {
+    if (typeof window === 'undefined') return;
+    if (!window.confirm(t('admin.banConfirm'))) return;
+    const reason = window.prompt(t('admin.banReasonPrompt')) || '';
+    setBusy(true);
+    try {
+      await banUser(id, reason);
+      await load(query.trim() || undefined);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('common.error'));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function unban(id: string) {
+    setBusy(true);
+    try {
+      await unbanUser(id);
+      await load(query.trim() || undefined);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('common.error'));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section className="admin__list">
+      <h2>{t('admin.users')}</h2>
+      <input
+        type="search"
+        className="lang-select"
+        style={{ width: '100%', padding: '10px 12px', marginBottom: 12 }}
+        placeholder={t('admin.searchUsers')}
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+      />
+      {error ? <div className="error-banner">{error}</div> : null}
+      {users === null ? (
+        <Loader label={t('common.loading')} />
+      ) : (
+        <ul className="friend-list">
+          {users.map((u) => {
+            const isMe = u._id === meId;
+            return (
+              <li key={u._id} className="friend-item">
+                <Link to={`/u/${u._id}`} className="friend-item__link">
+                  <Avatar
+                    src={u.avatarUrl}
+                    name={u.displayName}
+                    email={u.email}
+                    size={40}
+                  />
+                  <div>
+                    <strong>
+                      {u.displayName || u.email.split('@')[0]}
+                      {u.banned ? (
+                        <span className="badge badge--danger" style={{ marginLeft: 8 }}>
+                          {t('admin.userBanned')}
+                        </span>
+                      ) : null}
+                    </strong>
+                    <small>{u.email}</small>
+                  </div>
+                </Link>
+                <div className="friend-item__actions">
+                  <RolePill role={u.role} />
+                  <select
+                    className="lang-select"
+                    value={u.role}
+                    disabled={busy || isMe}
+                    onChange={(e) => changeRole(u._id, e.target.value as UserRole)}
+                  >
+                    <option value="user">user</option>
+                    <option value="developer">developer</option>
+                    <option value="admin">admin</option>
+                  </select>
+                  {u.banned ? (
+                    <button
+                      type="button"
+                      className="btn btn--ghost btn--small"
+                      disabled={busy}
+                      onClick={() => unban(u._id)}
+                    >
+                      {t('admin.unban')}
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className="btn btn--danger btn--small"
+                      disabled={busy || isMe}
+                      onClick={() => ban(u._id)}
+                    >
+                      {t('admin.ban')}
+                    </button>
+                  )}
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </section>
   );
 }

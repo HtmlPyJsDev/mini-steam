@@ -27,6 +27,15 @@ async function auth(req, res, next) {
       return res.status(401).json({ message: 'User no longer exists' });
     }
 
+    if (user.banned) {
+      return res.status(403).json({
+        message: user.bannedReason
+          ? `Account is banned: ${user.bannedReason}`
+          : 'Account is banned',
+        code: 'BANNED',
+      });
+    }
+
     req.user = user;
     return next();
   } catch (err) {

@@ -2,6 +2,8 @@ import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation, LANGUAGES, type Language } from '../i18n/I18nContext';
 import { Logo } from './Logo';
+import { Avatar } from './Avatar';
+import { RolePill } from './RolePill';
 
 export function Navbar() {
   const { user, logout } = useAuth();
@@ -29,6 +31,21 @@ export function Navbar() {
               {t('nav.profile')}
             </NavLink>
           ) : null}
+          {user ? (
+            <NavLink to="/friends" className={({ isActive }) => (isActive ? 'is-active' : '')}>
+              {t('nav.friends')}
+            </NavLink>
+          ) : null}
+          {user ? (
+            <NavLink to="/chat" className={({ isActive }) => (isActive ? 'is-active' : '')}>
+              {t('nav.messages')}
+            </NavLink>
+          ) : null}
+          {user && (user.role === 'developer' || user.role === 'admin') ? (
+            <NavLink to="/developer" className={({ isActive }) => (isActive ? 'is-active' : '')}>
+              {t('nav.developer')}
+            </NavLink>
+          ) : null}
           {user?.role === 'admin' ? (
             <NavLink to="/admin" className={({ isActive }) => (isActive ? 'is-active' : '')}>
               {t('nav.admin')}
@@ -54,7 +71,11 @@ export function Navbar() {
           </select>
           {user ? (
             <>
-              <span className="navbar__email">{user.email}</span>
+              <Link to="/profile" className="navbar__user" aria-label={t('nav.profile')}>
+                <Avatar src={user.avatarUrl} name={user.displayName} email={user.email} size={28} />
+                <span className="navbar__email">{user.displayName || user.email}</span>
+                <RolePill role={user.role} />
+              </Link>
               <button type="button" className="btn btn--ghost" onClick={handleLogout}>
                 {t('nav.signOut')}
               </button>

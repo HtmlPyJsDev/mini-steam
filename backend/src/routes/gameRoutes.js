@@ -11,7 +11,12 @@ const router = express.Router();
 router.get(
   '/',
   asyncHandler(async (_req, res) => {
-    const games = await Game.find().sort({ createdAt: -1 }).lean();
+    const games = await Game.find({
+      $or: [{ status: 'approved' }, { status: { $exists: false } }],
+    })
+      .sort({ createdAt: -1 })
+      .populate('uploaderId', 'email role displayName avatarUrl')
+      .lean();
     return res.json({ games });
   })
 );
@@ -19,8 +24,14 @@ router.get(
 router.get(
   '/:id',
   asyncHandler(async (req, res) => {
-    const game = await Game.findById(req.params.id).lean();
+    const game = await Game.findById(req.params.id)
+      .populate('uploaderId', 'email role displayName avatarUrl')
+      .lean();
     if (!game) {
+      return res.status(404).json({ message: 'Game not found' });
+    }
+    if (game.status === 'pending' || game.status === 'rejected') {
+      // Hide unapproved games from the public game detail.
       return res.status(404).json({ message: 'Game not found' });
     }
     return res.json({ game });
@@ -30,6 +41,9 @@ router.get(
 const downloadHandler = asyncHandler(async (req, res) => {
   const game = await Game.findById(req.params.id);
   if (!game) {
+    return res.status(404).json({ message: 'Game not found' });
+  }
+  if (game.status && game.status !== 'approved') {
     return res.status(404).json({ message: 'Game not found' });
   }
 

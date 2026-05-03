@@ -1,6 +1,9 @@
 const express = require('express');
 
+const mongoose = require('mongoose');
+
 const Game = require('../models/Game');
+const User = require('../models/User');
 const auth = require('../middleware/auth');
 const admin = require('../middleware/admin');
 const asyncHandler = require('../utils/asyncHandler');
@@ -112,6 +115,8 @@ router.post(
       fileUrl: String(req.body.gameFileUrl).trim(),
       fileKey: String(req.body.gameFileKey).trim(),
       size,
+      uploaderId: req.user._id,
+      status: 'approved',
     });
 
     return res.status(201).json({ game });
@@ -202,6 +207,119 @@ router.delete(
     }
 
     return res.json({ ok: true });
+  })
+);
+
+// ===== Game moderation =====
+
+router.get(
+  '/games/pending',
+  asyncHandler(async (_req, res) => {
+    const games = await Game.find({ status: 'pending' })
+      .sort({ createdAt: -1 })
+      .populate('uploaderId', 'email role displayName avatarUrl')
+      .lean();
+    return res.json({ games });
+  })
+);
+
+router.patch(
+  '/games/:id/status',
+  express.json(),
+  asyncHandler(async (req, res) => {
+    const status = String(req.body?.status || '').trim();
+    if (!['approved', 'rejected', 'pending'].includes(status)) {
+      return res.status(400).json({ message: 'status must be approved | rejected | pending' });
+    }
+    const game = await Game.findByIdAndUpdate(
+      req.params.id,
+      { status },
+      { new: true }
+    );
+    if (!game) return res.status(404).json({ message: 'Game not found' });
+    return res.json({ game });
+  })
+);
+
+// ===== User management =====
+
+router.get(
+  '/users',
+  asyncHandler(async (req, res) => {
+    const q = String(req.query.q || '').trim();
+    const filter = {};
+    if (q.length >= 1) {
+      const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const re = new RegExp(escaped, 'i');
+      filter.$or = [{ email: re }, { displayName: re }];
+    }
+    const users = await User.find(filter)
+      .select('email role displayName avatarUrl banned bannedReason developerGameId createdAt')
+      .sort({ createdAt: -1 })
+      .limit(200)
+      .lean();
+    return res.json({ users });
+  })
+);
+
+router.patch(
+  '/users/:id/role',
+  express.json(),
+  asyncHandler(async (req, res) => {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid user id' });
+    }
+    const role = String(req.body?.role || '').trim();
+    if (!['user', 'developer', 'admin'].includes(role)) {
+      return res.status(400).json({ message: 'role must be user | developer | admin' });
+    }
+    if (req.user._id.equals(req.params.id) && role !== 'admin') {
+      return res.status(400).json({ message: 'Admins cannot demote themselves' });
+    }
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      { role },
+      { new: true }
+    ).select('-password');
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    return res.json({ user });
+  })
+);
+
+router.post(
+  '/users/:id/ban',
+  express.json(),
+  asyncHandler(async (req, res) => {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid user id' });
+    }
+    if (req.user._id.equals(req.params.id)) {
+      return res.status(400).json({ message: 'Admins cannot ban themselves' });
+    }
+    const reason = String(req.body?.reason || '').slice(0, 200);
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      { banned: true, bannedReason: reason },
+      { new: true }
+    ).select('-password');
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    return res.json({ user });
+  })
+);
+
+router.post(
+  '/users/:id/unban',
+  asyncHandler(async (req, res) => {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid user id' });
+    }
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      { banned: false, bannedReason: '' },
+      { new: true }
+    ).select('-password');
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    return res.json({ user });
   })
 );
 

@@ -37,6 +37,17 @@ const gameSchema = new mongoose.Schema(
       default: 0,
       min: 0,
     },
+    uploaderId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
+    status: {
+      type: String,
+      enum: ['approved', 'pending', 'rejected'],
+      default: 'approved',
+      index: true,
+    },
   },
   { timestamps: true }
 );

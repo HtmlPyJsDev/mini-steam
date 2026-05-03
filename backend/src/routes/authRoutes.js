@@ -65,6 +65,14 @@ router.post(
     if (!ok) {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
+    if (user.banned) {
+      return res.status(403).json({
+        message: user.bannedReason
+          ? `Account is banned: ${user.bannedReason}`
+          : 'Account is banned',
+        code: 'BANNED',
+      });
+    }
 
     const token = createToken(user);
     return res.json({ token, user: user.toSafeJSON() });

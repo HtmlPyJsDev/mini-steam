@@ -9,6 +9,7 @@ const IMAGE_MIME_TYPES = new Set([
 ]);
 
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10 MB per image
+const MAX_AVATAR_SIZE = 3 * 1024 * 1024; // 3 MB
 
 function imageFileFilter(_req, file, cb) {
   if (file.fieldname === 'cover' || file.fieldname === 'screenshots') {
@@ -18,6 +19,16 @@ function imageFileFilter(_req, file, cb) {
     return cb(new Error(`Invalid image type for ${file.fieldname}: ${file.mimetype}`));
   }
   return cb(new Error(`Unexpected upload field: ${file.fieldname}`));
+}
+
+function avatarFileFilter(_req, file, cb) {
+  if (file.fieldname !== 'avatar') {
+    return cb(new Error(`Unexpected upload field: ${file.fieldname}`));
+  }
+  if (!IMAGE_MIME_TYPES.has(file.mimetype)) {
+    return cb(new Error(`Invalid avatar image type: ${file.mimetype}`));
+  }
+  return cb(null, true);
 }
 
 const storage = multer.memoryStorage();
@@ -30,12 +41,22 @@ const imageUploader = multer({
   },
 });
 
+const avatarUploader = multer({
+  storage,
+  fileFilter: avatarFileFilter,
+  limits: { fileSize: MAX_AVATAR_SIZE },
+});
+
 const gameImagesUpload = imageUploader.fields([
   { name: 'cover', maxCount: 1 },
   { name: 'screenshots', maxCount: 10 },
 ]);
 
+const avatarUpload = avatarUploader.single('avatar');
+
 module.exports = {
   gameImagesUpload,
+  avatarUpload,
   MAX_IMAGE_SIZE,
+  MAX_AVATAR_SIZE,
 };

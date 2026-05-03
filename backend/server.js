@@ -8,6 +8,11 @@ const authRoutes = require('./src/routes/authRoutes');
 const gameRoutes = require('./src/routes/gameRoutes');
 const adminRoutes = require('./src/routes/adminRoutes');
 const captchaRoutes = require('./src/routes/captchaRoutes');
+const meRoutes = require('./src/routes/meRoutes');
+const userRoutes = require('./src/routes/userRoutes');
+const friendsRoutes = require('./src/routes/friendsRoutes');
+const messageRoutes = require('./src/routes/messageRoutes');
+const developerRoutes = require('./src/routes/developerRoutes');
 const errorHandler = require('./src/middleware/errorHandler');
 const auth = require('./src/middleware/auth');
 
@@ -33,6 +38,11 @@ app.use('/api', authRoutes);
 app.use('/api/captcha', captchaRoutes);
 app.get('/api/download/:id', auth, gameRoutes.downloadHandler);
 app.use('/api/games', gameRoutes);
+app.use('/api/me', meRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/friends', friendsRoutes);
+app.use('/api/messages', messageRoutes);
+app.use('/api/developer', developerRoutes);
 app.use('/api/admin', adminRoutes);
 
 app.use((req, res, next) => {
