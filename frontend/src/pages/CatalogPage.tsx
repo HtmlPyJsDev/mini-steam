@@ -3,8 +3,10 @@ import { listGames } from '../api/games';
 import type { Game } from '../types';
 import { GameCard } from '../components/GameCard';
 import { Loader } from '../components/Loader';
+import { useTranslation } from '../i18n/I18nContext';
 
 export function CatalogPage() {
+  const { t } = useTranslation();
   const [games, setGames] = useState<Game[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -17,32 +19,29 @@ export function CatalogPage() {
       })
       .catch((err: unknown) => {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : 'Failed to load games');
+          setError(err instanceof Error ? err.message : t('catalog.failed'));
           setGames([]);
         }
       });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [t]);
 
   return (
     <div className="container">
       <section className="hero">
-        <h1 className="hero__title">Free & Open-Source Games</h1>
-        <p className="hero__subtitle">
-          Curated catalog of games with licenses that permit free redistribution. Browse, sign in,
-          and download — no hidden fees, no piracy.
-        </p>
+        <h1 className="hero__title">{t('catalog.heroTitle')}</h1>
+        <p className="hero__subtitle">{t('catalog.heroSubtitle')}</p>
       </section>
 
       {error ? <div className="error-banner">{error}</div> : null}
 
       {games === null ? (
-        <Loader label="Loading catalog…" />
+        <Loader label={t('catalog.loading')} />
       ) : games.length === 0 ? (
         <div className="empty-state">
-          <p>No games yet. Check back soon — or sign in as admin to add the first one.</p>
+          <p>{t('catalog.empty')}</p>
         </div>
       ) : (
         <div className="game-grid">

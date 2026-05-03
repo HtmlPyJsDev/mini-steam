@@ -1,13 +1,19 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTranslation } from '../i18n/I18nContext';
+import { Captcha } from '../components/Captcha';
 
 export function RegisterPage() {
   const { register } = useAuth();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
+  const [captchaId, setCaptchaId] = useState('');
+  const [captchaAnswer, setCaptchaAnswer] = useState('');
+  const [captchaNonce, setCaptchaNonce] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -16,20 +22,26 @@ export function RegisterPage() {
     setError(null);
 
     if (password !== confirm) {
-      setError('Passwords do not match');
+      setError(t('auth.passwordsMismatch'));
       return;
     }
     if (password.length < 6) {
-      setError('Password must be at least 6 characters');
+      setError(t('auth.passwordTooShort'));
+      return;
+    }
+    if (!captchaId || !captchaAnswer.trim()) {
+      setError(t('captcha.required'));
       return;
     }
 
     setLoading(true);
     try {
-      await register(email, password);
+      await register({ email, password, captchaId, captchaAnswer: captchaAnswer.trim() });
       navigate('/', { replace: true });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Registration failed');
+      setError(err instanceof Error ? err.message : t('auth.registrationFailed'));
+      setCaptchaNonce((n) => n + 1);
+      setCaptchaAnswer('');
     } finally {
       setLoading(false);
     }
@@ -38,11 +50,11 @@ export function RegisterPage() {
   return (
     <div className="auth-page">
       <form className="auth-card" onSubmit={handleSubmit}>
-        <h1>Create your account</h1>
-        <p className="auth-card__subtitle">Free, no credit card required.</p>
+        <h1>{t('auth.registerTitle')}</h1>
+        <p className="auth-card__subtitle">{t('auth.registerSubtitle')}</p>
 
         <label className="field">
-          <span>Email</span>
+          <span>{t('auth.email')}</span>
           <input
             type="email"
             value={email}
@@ -53,7 +65,7 @@ export function RegisterPage() {
         </label>
 
         <label className="field">
-          <span>Password</span>
+          <span>{t('auth.password')}</span>
           <input
             type="password"
             value={password}
@@ -65,7 +77,7 @@ export function RegisterPage() {
         </label>
 
         <label className="field">
-          <span>Confirm password</span>
+          <span>{t('auth.confirmPassword')}</span>
           <input
             type="password"
             value={confirm}
@@ -76,14 +88,22 @@ export function RegisterPage() {
           />
         </label>
 
+        <Captcha
+          key={captchaNonce}
+          value={captchaAnswer}
+          onChange={setCaptchaAnswer}
+          onChallengeChange={setCaptchaId}
+          disabled={loading}
+        />
+
         {error ? <div className="error-banner">{error}</div> : null}
 
         <button type="submit" className="btn btn--primary btn--block" disabled={loading}>
-          {loading ? 'Creating account…' : 'Create account'}
+          {loading ? t('auth.creatingAccount') : t('auth.createAccount')}
         </button>
 
         <p className="auth-card__alt">
-          Already have an account? <Link to="/login">Sign in</Link>
+          {t('auth.haveAccount')} <Link to="/login">{t('nav.signIn')}</Link>
         </p>
       </form>
     </div>

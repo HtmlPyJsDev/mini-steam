@@ -5,6 +5,7 @@ const User = require('../models/User');
 const auth = require('../middleware/auth');
 const asyncHandler = require('../utils/asyncHandler');
 const createToken = require('../utils/createToken');
+const { verifyCaptcha } = require('../utils/captcha');
 
 const router = express.Router();
 
@@ -13,13 +14,19 @@ const BCRYPT_ROUNDS = 10;
 router.post(
   '/register',
   asyncHandler(async (req, res) => {
-    const { email, password } = req.body || {};
+    const { email, password, captchaId, captchaAnswer } = req.body || {};
 
     if (!email || !password) {
       return res.status(400).json({ message: 'Email and password are required' });
     }
     if (typeof password !== 'string' || password.length < 6) {
       return res.status(400).json({ message: 'Password must be at least 6 characters' });
+    }
+    if (!captchaId || !captchaAnswer) {
+      return res.status(400).json({ message: 'Captcha is required', code: 'CAPTCHA_REQUIRED' });
+    }
+    if (!verifyCaptcha(captchaId, captchaAnswer)) {
+      return res.status(400).json({ message: 'Captcha is incorrect or expired', code: 'CAPTCHA_INVALID' });
     }
 
     const normalizedEmail = String(email).trim().toLowerCase();

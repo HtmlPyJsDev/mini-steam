@@ -1,9 +1,11 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTranslation } from '../i18n/I18nContext';
 import type { Game } from '../types';
 
 export function ProfilePage() {
   const { user } = useAuth();
+  const { t } = useTranslation();
 
   if (!user) return null;
 
@@ -16,17 +18,19 @@ export function ProfilePage() {
       <section className="profile">
         <header className="profile__header">
           <div>
-            <h1>Your profile</h1>
+            <h1>{t('profile.title')}</h1>
             <p className="profile__email">{user.email}</p>
-            <span className={`role-pill role-pill--${user.role}`}>{user.role}</span>
+            <span className={`role-pill role-pill--${user.role}`}>
+              {user.role === 'admin' ? t('role.admin') : t('role.user')}
+            </span>
           </div>
         </header>
 
         <section className="profile__downloads">
-          <h2>Download history</h2>
+          <h2>{t('profile.history')}</h2>
           {downloads.length === 0 ? (
             <p className="empty-state">
-              You haven't downloaded any games yet. <Link to="/">Browse the catalog</Link>.
+              {t('profile.empty')} <Link to="/">{t('profile.browse')}</Link>.
             </p>
           ) : (
             <ul className="profile__list">

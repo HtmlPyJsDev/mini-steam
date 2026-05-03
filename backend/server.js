@@ -7,6 +7,7 @@ const connectDB = require('./src/config/db');
 const authRoutes = require('./src/routes/authRoutes');
 const gameRoutes = require('./src/routes/gameRoutes');
 const adminRoutes = require('./src/routes/adminRoutes');
+const captchaRoutes = require('./src/routes/captchaRoutes');
 const errorHandler = require('./src/middleware/errorHandler');
 const auth = require('./src/middleware/auth');
 
@@ -29,6 +30,7 @@ app.get('/api/health', (_req, res) => {
 });
 
 app.use('/api', authRoutes);
+app.use('/api/captcha', captchaRoutes);
 app.get('/api/download/:id', auth, gameRoutes.downloadHandler);
 app.use('/api/games', gameRoutes);
 app.use('/api/admin', adminRoutes);

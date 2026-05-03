@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { App } from './App';
 import { AuthProvider } from './context/AuthContext';
+import { I18nProvider } from './i18n/I18nContext';
 import './styles/global.css';
 
 const rootElement = document.getElementById('root');
@@ -13,9 +14,11 @@ if (!rootElement) {
 createRoot(rootElement).render(
   <StrictMode>
     <BrowserRouter>
-      <AuthProvider>
-        <App />
-      </AuthProvider>
+      <I18nProvider>
+        <AuthProvider>
+          <App />
+        </AuthProvider>
+      </I18nProvider>
     </BrowserRouter>
   </StrictMode>
 );

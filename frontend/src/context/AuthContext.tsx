@@ -7,7 +7,12 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { fetchMe, login as apiLogin, register as apiRegister } from '../api/auth';
+import {
+  fetchMe,
+  login as apiLogin,
+  register as apiRegister,
+  type RegisterPayload,
+} from '../api/auth';
 import { setToken, getToken } from '../api/client';
 import type { User } from '../types';
 
@@ -16,7 +21,7 @@ interface AuthContextValue {
   loading: boolean;
   error: string | null;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string) => Promise<void>;
+  register: (payload: RegisterPayload) => Promise<void>;
   logout: () => void;
   refresh: () => Promise<void>;
 }
@@ -62,10 +67,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const register = useCallback(async (email: string, password: string) => {
+  const register = useCallback(async (payload: RegisterPayload) => {
     setError(null);
     try {
-      const res = await apiRegister(email, password);
+      const res = await apiRegister(payload);
       setToken(res.token);
       setUser(res.user);
     } catch (err) {

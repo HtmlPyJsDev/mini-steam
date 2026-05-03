@@ -4,6 +4,7 @@ import { getGame, requestDownload } from '../api/games';
 import type { Game } from '../types';
 import { Loader } from '../components/Loader';
 import { useAuth } from '../context/AuthContext';
+import { useTranslation } from '../i18n/I18nContext';
 
 function formatBytes(bytes: number): string {
   if (!bytes || bytes <= 0) return '—';
@@ -20,6 +21,7 @@ function formatBytes(bytes: number): string {
 export function GamePage() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [game, setGame] = useState<Game | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [activeShot, setActiveShot] = useState<string | null>(null);
@@ -38,12 +40,12 @@ export function GamePage() {
         }
       })
       .catch((err: unknown) => {
-        if (!cancelled) setError(err instanceof Error ? err.message : 'Failed to load game');
+        if (!cancelled) setError(err instanceof Error ? err.message : t('game.failed'));
       });
     return () => {
       cancelled = true;
     };
-  }, [id]);
+  }, [id, t]);
 
   async function handleDownload() {
     if (!id) return;
@@ -53,7 +55,7 @@ export function GamePage() {
       const res = await requestDownload(id);
       window.open(res.url, '_blank', 'noopener,noreferrer');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Download failed');
+      setError(err instanceof Error ? err.message : t('game.downloadFailed'));
     } finally {
       setDownloading(false);
     }
@@ -62,7 +64,7 @@ export function GamePage() {
   if (!game) {
     return (
       <div className="container">
-        {error ? <div className="error-banner">{error}</div> : <Loader label="Loading game…" />}
+        {error ? <div className="error-banner">{error}</div> : <Loader label={t('game.loading')} />}
       </div>
     );
   }
@@ -78,11 +80,11 @@ export function GamePage() {
             <h1 className="game-detail__title">{game.title}</h1>
             <dl className="game-detail__facts">
               <div>
-                <dt>License</dt>
+                <dt>{t('game.license')}</dt>
                 <dd>{game.license}</dd>
               </div>
               <div>
-                <dt>File size</dt>
+                <dt>{t('game.fileSize')}</dt>
                 <dd>{formatBytes(game.size)}</dd>
               </div>
             </dl>
@@ -94,17 +96,17 @@ export function GamePage() {
                 onClick={handleDownload}
                 disabled={downloading}
               >
-                {downloading ? 'Preparing link…' : 'Download'}
+                {downloading ? t('game.preparingLink') : t('game.download')}
               </button>
             ) : (
               <div className="auth-cta">
-                <p>Sign in to download this game.</p>
+                <p>{t('game.signInToDownload')}</p>
                 <div className="auth-cta__actions">
                   <Link to="/login" className="btn btn--primary">
-                    Sign in
+                    {t('nav.signIn')}
                   </Link>
                   <Link to="/register" className="btn btn--ghost">
-                    Register
+                    {t('nav.register')}
                   </Link>
                 </div>
               </div>
@@ -116,7 +118,7 @@ export function GamePage() {
 
         {game.screenshots.length > 0 ? (
           <section className="game-detail__shots">
-            <h2>Screenshots</h2>
+            <h2>{t('game.screenshots')}</h2>
             <div className="screenshot-strip">
               {game.screenshots.map((url) => (
                 <button
@@ -133,7 +135,7 @@ export function GamePage() {
         ) : null}
 
         <section className="game-detail__about">
-          <h2>About</h2>
+          <h2>{t('game.about')}</h2>
           <p>{game.description}</p>
         </section>
       </article>

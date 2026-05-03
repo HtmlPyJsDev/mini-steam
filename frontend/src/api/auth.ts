@@ -1,10 +1,17 @@
 import { apiRequest } from './client';
 import type { AuthResponse, User } from '../types';
 
-export function register(email: string, password: string): Promise<AuthResponse> {
+export interface RegisterPayload {
+  email: string;
+  password: string;
+  captchaId: string;
+  captchaAnswer: string;
+}
+
+export function register(payload: RegisterPayload): Promise<AuthResponse> {
   return apiRequest<AuthResponse>('/register', {
     method: 'POST',
-    body: { email, password },
+    body: payload,
   });
 }
 

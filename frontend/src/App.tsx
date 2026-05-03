@@ -8,8 +8,11 @@ import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { AdminPage } from './pages/AdminPage';
+import { SettingsPage } from './pages/SettingsPage';
+import { useTranslation } from './i18n/I18nContext';
 
 export function App() {
+  const { t } = useTranslation();
   return (
     <div className="app-shell">
       <Navbar />
@@ -19,6 +22,7 @@ export function App() {
           <Route path="/game/:id" element={<GamePage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
           <Route
             path="/profile"
             element={
@@ -48,10 +52,7 @@ export function App() {
       </main>
       <footer className="app-footer">
         <div className="container app-footer__inner">
-          <p>
-            Uzisoft · A catalog for legally free and open-source games. Only games whose
-            license permits free redistribution are listed.
-          </p>
+          <p>{t('footer.text')}</p>
         </div>
       </footer>
     </div>

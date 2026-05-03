@@ -1,9 +1,11 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTranslation } from '../i18n/I18nContext';
 
 export function LoginPage() {
   const { login } = useAuth();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const [email, setEmail] = useState('');
@@ -21,7 +23,7 @@ export function LoginPage() {
       await login(email, password);
       navigate(from, { replace: true });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed');
+      setError(err instanceof Error ? err.message : t('auth.loginFailed'));
     } finally {
       setLoading(false);
     }
@@ -30,11 +32,11 @@ export function LoginPage() {
   return (
     <div className="auth-page">
       <form className="auth-card" onSubmit={handleSubmit}>
-        <h1>Welcome back</h1>
-        <p className="auth-card__subtitle">Sign in to download free games.</p>
+        <h1>{t('auth.signInTitle')}</h1>
+        <p className="auth-card__subtitle">{t('auth.signInSubtitle')}</p>
 
         <label className="field">
-          <span>Email</span>
+          <span>{t('auth.email')}</span>
           <input
             type="email"
             value={email}
@@ -45,7 +47,7 @@ export function LoginPage() {
         </label>
 
         <label className="field">
-          <span>Password</span>
+          <span>{t('auth.password')}</span>
           <input
             type="password"
             value={password}
@@ -59,11 +61,11 @@ export function LoginPage() {
         {error ? <div className="error-banner">{error}</div> : null}
 
         <button type="submit" className="btn btn--primary btn--block" disabled={loading}>
-          {loading ? 'Signing in…' : 'Sign in'}
+          {loading ? t('auth.signingIn') : t('auth.signIn')}
         </button>
 
         <p className="auth-card__alt">
-          New here? <Link to="/register">Create an account</Link>
+          {t('auth.newHere')} <Link to="/register">{t('nav.register')}</Link>
         </p>
       </form>
     </div>
