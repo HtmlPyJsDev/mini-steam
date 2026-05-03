@@ -1,4 +1,21 @@
-export type UserRole = 'user' | 'developer' | 'admin';
+export type UserRole = 'user' | 'developer' | 'security' | 'admin';
+
+export interface ShopRole {
+  id: 'developer' | 'security';
+  priceCents: number;
+  currency: string;
+  perks: string[];
+}
+
+export interface RolePurchase {
+  _id: string;
+  role: 'developer' | 'security';
+  priceCents: number;
+  currency: string;
+  cardLast4?: string;
+  status: 'completed' | 'failed';
+  createdAt: string;
+}
 
 export interface User {
   _id: string;

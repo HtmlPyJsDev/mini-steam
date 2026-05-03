@@ -48,12 +48,20 @@ export function DeveloperPage() {
   if (user.role !== 'developer' && user.role !== 'admin') {
     return (
       <div className="container">
-        <section className="settings">
+        <section className="settings paywall">
           <header className="settings__header">
             <h1>{t('developer.title')}</h1>
+            <p>{t('paywall.title')}</p>
           </header>
-          <p className="empty-state">{t('developer.notDeveloper')}</p>
-          <p className="settings__hint">{t('developer.askAdmin')}</p>
+          <div className="paywall__body">
+            <div className="paywall__icon" aria-hidden="true">
+              🔒
+            </div>
+            <p className="paywall__text">{t('paywall.developer')}</p>
+            <Link to="/shop" className="btn btn--primary paywall__cta">
+              {t('paywall.buy')}
+            </Link>
+          </div>
         </section>
       </div>
     );

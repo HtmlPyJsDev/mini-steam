@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { LANGUAGES, useTranslation } from '../i18n/I18nContext';
 import { useAuth } from '../context/AuthContext';
+import { RolePill } from '../components/RolePill';
 
 export function SettingsPage() {
   const { language, setLanguage, t } = useTranslation();
@@ -45,9 +46,7 @@ export function SettingsPage() {
               </li>
               <li>
                 <span>{t('settings.role')}</span>
-                <span className={`role-pill role-pill--${user.role}`}>
-                  {user.role === 'admin' ? t('role.admin') : t('role.user')}
-                </span>
+                <RolePill role={user.role} />
               </li>
             </ul>
           ) : (

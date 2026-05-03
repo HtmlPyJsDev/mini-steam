@@ -6,6 +6,7 @@ const Game = require('../models/Game');
 const User = require('../models/User');
 const auth = require('../middleware/auth');
 const admin = require('../middleware/admin');
+const roleGuard = require('../middleware/roleGuard');
 const asyncHandler = require('../utils/asyncHandler');
 const { gameImagesUpload } = require('../middleware/upload');
 const {
@@ -21,7 +22,9 @@ const {
 
 const router = express.Router();
 
-router.use(auth, admin);
+router.use(auth);
+const adminOnly = admin;
+const adminOrSecurity = roleGuard('admin', 'security');
 
 const GAME_FILE_EXTENSIONS = /\.(zip|rar|7z|tar|gz|tgz|exe|msi|appimage|dmg|deb|pkg|iso)$/i;
 
@@ -56,6 +59,7 @@ async function uploadScreenshot(file) {
 
 router.post(
   '/uploads/game-file/presign',
+  adminOnly,
   express.json(),
   asyncHandler(async (req, res) => {
     const { filename, contentType } = req.body || {};
@@ -80,6 +84,7 @@ router.post(
 
 router.post(
   '/uploads/game-file/multipart/init',
+  adminOnly,
   express.json(),
   asyncHandler(async (req, res) => {
     const { filename, contentType } = req.body || {};
@@ -108,6 +113,7 @@ router.post(
 
 router.post(
   '/uploads/game-file/multipart/sign',
+  adminOnly,
   express.json(),
   asyncHandler(async (req, res) => {
     const { key, uploadId, partNumbers } = req.body || {};
@@ -130,6 +136,7 @@ router.post(
 
 router.post(
   '/uploads/game-file/multipart/complete',
+  adminOnly,
   express.json(),
   asyncHandler(async (req, res) => {
     const { key, uploadId, parts } = req.body || {};
@@ -152,6 +159,7 @@ router.post(
 
 router.post(
   '/uploads/game-file/multipart/abort',
+  adminOnly,
   express.json(),
   asyncHandler(async (req, res) => {
     const { key, uploadId } = req.body || {};
@@ -168,6 +176,7 @@ router.post(
 
 router.post(
   '/games',
+  adminOnly,
   gameImagesUpload,
   asyncHandler(async (req, res) => {
     requireFields(req.body, [
@@ -217,6 +226,7 @@ router.post(
 
 router.put(
   '/games/:id',
+  adminOnly,
   gameImagesUpload,
   asyncHandler(async (req, res) => {
     const game = await Game.findById(req.params.id);
@@ -280,6 +290,7 @@ router.put(
 
 router.delete(
   '/games/:id',
+  adminOnly,
   asyncHandler(async (req, res) => {
     const game = await Game.findById(req.params.id);
     if (!game) {
@@ -306,6 +317,7 @@ router.delete(
 
 router.get(
   '/games/pending',
+  adminOrSecurity,
   asyncHandler(async (_req, res) => {
     const games = await Game.find({ status: 'pending' })
       .sort({ createdAt: -1 })
@@ -317,6 +329,7 @@ router.get(
 
 router.patch(
   '/games/:id/status',
+  adminOrSecurity,
   express.json(),
   asyncHandler(async (req, res) => {
     const status = String(req.body?.status || '').trim();
@@ -337,6 +350,7 @@ router.patch(
 
 router.get(
   '/users',
+  adminOrSecurity,
   asyncHandler(async (req, res) => {
     const q = String(req.query.q || '').trim();
     const filter = {};
@@ -356,14 +370,17 @@ router.get(
 
 router.patch(
   '/users/:id/role',
+  adminOnly,
   express.json(),
   asyncHandler(async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
       return res.status(400).json({ message: 'Invalid user id' });
     }
     const role = String(req.body?.role || '').trim();
-    if (!['user', 'developer', 'admin'].includes(role)) {
-      return res.status(400).json({ message: 'role must be user | developer | admin' });
+    if (!['user', 'developer', 'security', 'admin'].includes(role)) {
+      return res
+        .status(400)
+        .json({ message: 'role must be user | developer | security | admin' });
     }
     if (req.user._id.equals(req.params.id) && role !== 'admin') {
       return res.status(400).json({ message: 'Admins cannot demote themselves' });
@@ -380,13 +397,22 @@ router.patch(
 
 router.post(
   '/users/:id/ban',
+  adminOrSecurity,
   express.json(),
   asyncHandler(async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
       return res.status(400).json({ message: 'Invalid user id' });
     }
     if (req.user._id.equals(req.params.id)) {
-      return res.status(400).json({ message: 'Admins cannot ban themselves' });
+      return res.status(400).json({ message: 'You cannot ban yourself' });
+    }
+    const target = await User.findById(req.params.id).select('role');
+    if (!target) return res.status(404).json({ message: 'User not found' });
+    if (target.role === 'admin') {
+      return res.status(403).json({ message: 'Admins cannot be banned' });
+    }
+    if (req.user.role === 'security' && target.role === 'security') {
+      return res.status(403).json({ message: 'Security cannot ban other security users' });
     }
     const reason = String(req.body?.reason || '').slice(0, 200);
     const user = await User.findByIdAndUpdate(
@@ -401,6 +427,7 @@ router.post(
 
 router.post(
   '/users/:id/unban',
+  adminOrSecurity,
   asyncHandler(async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
       return res.status(400).json({ message: 'Invalid user id' });

@@ -41,12 +41,17 @@ export function Navbar() {
               {t('nav.messages')}
             </NavLink>
           ) : null}
-          {user && (user.role === 'developer' || user.role === 'admin') ? (
+          {user ? (
             <NavLink to="/developer" className={({ isActive }) => (isActive ? 'is-active' : '')}>
               {t('nav.developer')}
             </NavLink>
           ) : null}
-          {user?.role === 'admin' ? (
+          {user ? (
+            <NavLink to="/shop" className={({ isActive }) => (isActive ? 'is-active' : '')}>
+              {t('nav.shop')}
+            </NavLink>
+          ) : null}
+          {user && (user.role === 'admin' || user.role === 'security') ? (
             <NavLink to="/admin" className={({ isActive }) => (isActive ? 'is-active' : '')}>
               {t('nav.admin')}
             </NavLink>

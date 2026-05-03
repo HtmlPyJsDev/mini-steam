@@ -99,6 +99,7 @@ export type TranslationKey =
   | 'role.admin'
   | 'role.user'
   | 'role.developer'
+  | 'role.security'
   | 'friends.title'
   | 'friends.searchPlaceholder'
   | 'friends.searchHint'
@@ -157,7 +158,39 @@ export type TranslationKey =
   | 'admin.pendingTitle'
   | 'admin.pendingEmpty'
   | 'admin.approve'
-  | 'admin.reject';
+  | 'admin.reject'
+  | 'shop.title'
+  | 'shop.subtitle'
+  | 'shop.buy'
+  | 'shop.purchasing'
+  | 'shop.youHaveRole'
+  | 'shop.roleDeveloperName'
+  | 'shop.roleSecurityName'
+  | 'shop.roleDeveloperDesc'
+  | 'shop.roleSecurityDesc'
+  | 'shop.perkPublishGame'
+  | 'shop.perkDeveloperBadge'
+  | 'shop.perkModerate'
+  | 'shop.perkBanUsers'
+  | 'shop.perkSecurityBadge'
+  | 'shop.checkoutTitle'
+  | 'shop.cardName'
+  | 'shop.cardNumber'
+  | 'shop.cardExpiry'
+  | 'shop.cardCvc'
+  | 'shop.payNow'
+  | 'shop.cancel'
+  | 'shop.demoNotice'
+  | 'shop.success'
+  | 'shop.failed'
+  | 'shop.invalidCard'
+  | 'shop.history'
+  | 'shop.historyEmpty'
+  | 'paywall.title'
+  | 'paywall.developer'
+  | 'paywall.security'
+  | 'paywall.buy'
+  | 'nav.shop';
 
 type Dict = Record<TranslationKey, string>;
 
@@ -255,6 +288,7 @@ const en: Dict = {
   'role.admin': 'admin',
   'role.user': 'user',
   'role.developer': 'developer',
+  'role.security': 'security',
   'friends.title': 'Friends',
   'friends.searchPlaceholder': 'Search by email or display name',
   'friends.searchHint': 'Type at least 2 characters',
@@ -317,6 +351,43 @@ const en: Dict = {
   'admin.pendingEmpty': 'No pending games.',
   'admin.approve': 'Approve',
   'admin.reject': 'Reject',
+  'shop.title': 'Role store',
+  'shop.subtitle':
+    'Unlock new privileges. Pick a role, pay with your card, and the role is granted instantly.',
+  'shop.buy': 'Buy',
+  'shop.purchasing': 'Processing…',
+  'shop.youHaveRole': 'You already have this role.',
+  'shop.roleDeveloperName': 'Developer',
+  'shop.roleSecurityName': 'Security',
+  'shop.roleDeveloperDesc': 'Publish your own game (1 slot per developer).',
+  'shop.roleSecurityDesc':
+    'Help moderate the platform — review pending games, ban abusive users.',
+  'shop.perkPublishGame': 'Publish 1 game in the catalog',
+  'shop.perkDeveloperBadge': 'Developer badge on your profile',
+  'shop.perkModerate': 'Approve / reject games on the moderation queue',
+  'shop.perkBanUsers': 'Ban or unban users for abuse',
+  'shop.perkSecurityBadge': 'Security badge on your profile',
+  'shop.checkoutTitle': 'Checkout',
+  'shop.cardName': 'Cardholder name',
+  'shop.cardNumber': 'Card number',
+  'shop.cardExpiry': 'Expiry (MM/YY)',
+  'shop.cardCvc': 'CVC',
+  'shop.payNow': 'Pay',
+  'shop.cancel': 'Cancel',
+  'shop.demoNotice':
+    'Demo mode — no real charges. Any well-formed card details will work.',
+  'shop.success': 'Payment successful — role granted!',
+  'shop.failed': 'Payment failed',
+  'shop.invalidCard': 'Please check your card details.',
+  'shop.history': 'Purchase history',
+  'shop.historyEmpty': 'No purchases yet.',
+  'paywall.title': 'Developer access required',
+  'paywall.developer':
+    "You don't have the developer role. Please buy it for $10 to publish your own game.",
+  'paywall.security':
+    "You don't have the security role. Please buy it for $20 to access moderation tools.",
+  'paywall.buy': 'Buy in the store',
+  'nav.shop': 'Store',
 };
 
 const ru: Dict = {
@@ -413,6 +484,7 @@ const ru: Dict = {
   'role.admin': 'админ',
   'role.user': 'пользователь',
   'role.developer': 'разработчик',
+  'role.security': 'security',
   'friends.title': 'Друзья',
   'friends.searchPlaceholder': 'Поиск по email или имени',
   'friends.searchHint': 'Введите минимум 2 символа',
@@ -475,6 +547,43 @@ const ru: Dict = {
   'admin.pendingEmpty': 'Игр на проверке нет.',
   'admin.approve': 'Одобрить',
   'admin.reject': 'Отклонить',
+  'shop.title': 'Магазин ролей',
+  'shop.subtitle':
+    'Получите новые возможности. Выберите роль, оплатите картой — роль выдаётся сразу.',
+  'shop.buy': 'Купить',
+  'shop.purchasing': 'Обработка…',
+  'shop.youHaveRole': 'У вас уже есть эта роль.',
+  'shop.roleDeveloperName': 'Developer',
+  'shop.roleSecurityName': 'Security',
+  'shop.roleDeveloperDesc': 'Публикуйте свои игры (1 слот на разработчика).',
+  'shop.roleSecurityDesc':
+    'Помогайте модерировать платформу — проверяйте новые игры, блокируйте нарушителей.',
+  'shop.perkPublishGame': 'Опубликовать 1 игру в каталоге',
+  'shop.perkDeveloperBadge': 'Бейдж Developer в профиле',
+  'shop.perkModerate': 'Одобрять и отклонять игры на проверке',
+  'shop.perkBanUsers': 'Банить и разбанивать пользователей',
+  'shop.perkSecurityBadge': 'Бейдж Security в профиле',
+  'shop.checkoutTitle': 'Оплата',
+  'shop.cardName': 'Имя на карте',
+  'shop.cardNumber': 'Номер карты',
+  'shop.cardExpiry': 'Срок (MM/YY)',
+  'shop.cardCvc': 'CVC',
+  'shop.payNow': 'Оплатить',
+  'shop.cancel': 'Отмена',
+  'shop.demoNotice':
+    'Демо-режим — реальные деньги не списываются. Любые корректно заполненные данные карты подойдут.',
+  'shop.success': 'Оплата прошла — роль выдана!',
+  'shop.failed': 'Не удалось оплатить',
+  'shop.invalidCard': 'Проверьте данные карты.',
+  'shop.history': 'История покупок',
+  'shop.historyEmpty': 'Покупок пока нет.',
+  'paywall.title': 'Нужна роль Developer',
+  'paywall.developer':
+    'У вас нет роли developer. Пожалуйста, купите её за $10, чтобы опубликовать свою игру.',
+  'paywall.security':
+    'У вас нет роли security. Пожалуйста, купите её за $20, чтобы получить доступ к модерации.',
+  'paywall.buy': 'Купить в магазине',
+  'nav.shop': 'Магазин',
 };
 
 const uz: Dict = {
@@ -572,6 +681,7 @@ const uz: Dict = {
   'role.admin': 'admin',
   'role.user': 'foydalanuvchi',
   'role.developer': 'dasturchi',
+  'role.security': 'xavfsizlik',
   'friends.title': "Do'stlar",
   'friends.searchPlaceholder': 'Email yoki ism orqali izlash',
   'friends.searchHint': 'Kamida 2 ta belgi kiriting',
@@ -634,6 +744,44 @@ const uz: Dict = {
   'admin.pendingEmpty': "Tekshiruvdagi o'yinlar yo'q.",
   'admin.approve': 'Tasdiqlash',
   'admin.reject': 'Rad etish',
+  'shop.title': "Rollar do'koni",
+  'shop.subtitle':
+    "Yangi imkoniyatlarni oching. Rolni tanlang, karta orqali to'lang — rol darhol beriladi.",
+  'shop.buy': 'Sotib olish',
+  'shop.purchasing': 'Bajarilmoqda…',
+  'shop.youHaveRole': 'Sizda bu rol allaqachon bor.',
+  'shop.roleDeveloperName': 'Developer',
+  'shop.roleSecurityName': 'Security',
+  'shop.roleDeveloperDesc':
+    "O'z o'yiningizni chiqaring (har bir dasturchiga 1 ta slot).",
+  'shop.roleSecurityDesc':
+    "Platformani moderatsiya qilishga yordam bering — o'yinlarni tekshiring, qoidabuzarlarni bloklang.",
+  'shop.perkPublishGame': "Katalogga 1 ta o'yin chiqarish",
+  'shop.perkDeveloperBadge': 'Profilda Developer belgisi',
+  'shop.perkModerate': "O'yinlarni tasdiqlash / rad etish",
+  'shop.perkBanUsers': 'Foydalanuvchilarni bloklash / blokdan chiqarish',
+  'shop.perkSecurityBadge': 'Profilda Security belgisi',
+  'shop.checkoutTitle': "To'lov",
+  'shop.cardName': 'Karta egasi',
+  'shop.cardNumber': 'Karta raqami',
+  'shop.cardExpiry': 'Muddati (MM/YY)',
+  'shop.cardCvc': 'CVC',
+  'shop.payNow': "To'lash",
+  'shop.cancel': 'Bekor qilish',
+  'shop.demoNotice':
+    "Demo rejim — haqiqiy pul yechilmaydi. Har qanday to'g'ri to'ldirilgan karta ishlaydi.",
+  'shop.success': "To'lov muvaffaqiyatli — rol berildi!",
+  'shop.failed': "To'lov amalga oshmadi",
+  'shop.invalidCard': "Karta ma'lumotlarini tekshiring.",
+  'shop.history': 'Sotib olish tarixi',
+  'shop.historyEmpty': "Hali xaridlar yo'q.",
+  'paywall.title': 'Developer kirish kerak',
+  'paywall.developer':
+    "Sizda developer roli yo'q. O'z o'yiningizni chiqarish uchun uni $10 ga sotib oling.",
+  'paywall.security':
+    "Sizda security roli yo'q. Moderatsiya vositalariga kirish uchun uni $20 ga sotib oling.",
+  'paywall.buy': "Do'konda sotib olish",
+  'nav.shop': "Do'kon",
 };
 
 export const TRANSLATIONS: Record<Language, Dict> = { en, ru, uz };

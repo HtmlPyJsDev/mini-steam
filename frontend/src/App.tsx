@@ -13,6 +13,7 @@ import { ChatPage } from './pages/ChatPage';
 import { DeveloperPage } from './pages/DeveloperPage';
 import { AdminPage } from './pages/AdminPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { ShopPage } from './pages/ShopPage';
 import { useTranslation } from './i18n/I18nContext';
 
 export function App() {
@@ -76,9 +77,17 @@ export function App() {
             }
           />
           <Route
+            path="/shop"
+            element={
+              <ProtectedRoute>
+                <ShopPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/admin"
             element={
-              <AdminRoute>
+              <AdminRoute allowSecurity>
                 <AdminPage />
               </AdminRoute>
             }

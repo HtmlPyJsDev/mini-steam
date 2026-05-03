@@ -5,9 +5,10 @@ import { Loader } from './Loader';
 
 interface AdminRouteProps {
   children: ReactNode;
+  allowSecurity?: boolean;
 }
 
-export function AdminRoute({ children }: AdminRouteProps) {
+export function AdminRoute({ children, allowSecurity = false }: AdminRouteProps) {
   const { user, loading } = useAuth();
 
   if (loading) {
@@ -18,10 +19,13 @@ export function AdminRoute({ children }: AdminRouteProps) {
     return <Navigate to="/login" replace />;
   }
 
-  if (user.role !== 'admin') {
+  const allowed = user.role === 'admin' || (allowSecurity && user.role === 'security');
+  if (!allowed) {
     return (
       <div className="container">
-        <div className="error-banner">Access denied. Admin privileges required.</div>
+        <div className="error-banner">
+          Access denied. {allowSecurity ? 'Admin or security' : 'Admin'} privileges required.
+        </div>
       </div>
     );
   }

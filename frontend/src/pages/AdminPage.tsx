@@ -61,20 +61,23 @@ type Tab = 'games' | 'pending' | 'users';
 export function AdminPage() {
   const { user: me } = useAuth();
   const { t } = useTranslation();
-  const [tab, setTab] = useState<Tab>('games');
+  const isAdmin = me?.role === 'admin';
+  const [tab, setTab] = useState<Tab>(isAdmin ? 'games' : 'pending');
 
   return (
     <div className="container">
-      <h1 className="admin__title">Admin · Uzisoft</h1>
+      <h1 className="admin__title">{isAdmin ? 'Admin · Uzisoft' : 'Security · Uzisoft'}</h1>
 
       <div className="admin__tabs">
-        <button
-          type="button"
-          className={`admin__tab${tab === 'games' ? ' is-active' : ''}`}
-          onClick={() => setTab('games')}
-        >
-          {t('admin.tabsGames')}
-        </button>
+        {isAdmin && (
+          <button
+            type="button"
+            className={`admin__tab${tab === 'games' ? ' is-active' : ''}`}
+            onClick={() => setTab('games')}
+          >
+            {t('admin.tabsGames')}
+          </button>
+        )}
         <button
           type="button"
           className={`admin__tab${tab === 'pending' ? ' is-active' : ''}`}
@@ -91,9 +94,9 @@ export function AdminPage() {
         </button>
       </div>
 
-      {tab === 'games' ? <GamesTab /> : null}
+      {tab === 'games' && isAdmin ? <GamesTab /> : null}
       {tab === 'pending' ? <PendingTab /> : null}
-      {tab === 'users' ? <UsersTab meId={me?._id} /> : null}
+      {tab === 'users' ? <UsersTab meId={me?._id} canEditRoles={isAdmin} /> : null}
     </div>
   );
 }
@@ -444,7 +447,7 @@ function PendingTab() {
   );
 }
 
-function UsersTab({ meId }: { meId?: string }) {
+function UsersTab({ meId, canEditRoles }: { meId?: string; canEditRoles: boolean }) {
   const { t } = useTranslation();
   const [users, setUsers] = useState<User[] | null>(null);
   const [query, setQuery] = useState('');
@@ -555,16 +558,19 @@ function UsersTab({ meId }: { meId?: string }) {
                 </Link>
                 <div className="friend-item__actions">
                   <RolePill role={u.role} />
-                  <select
-                    className="lang-select"
-                    value={u.role}
-                    disabled={busy || isMe}
-                    onChange={(e) => changeRole(u._id, e.target.value as UserRole)}
-                  >
-                    <option value="user">user</option>
-                    <option value="developer">developer</option>
-                    <option value="admin">admin</option>
-                  </select>
+                  {canEditRoles ? (
+                    <select
+                      className="lang-select"
+                      value={u.role}
+                      disabled={busy || isMe}
+                      onChange={(e) => changeRole(u._id, e.target.value as UserRole)}
+                    >
+                      <option value="user">user</option>
+                      <option value="developer">developer</option>
+                      <option value="security">security</option>
+                      <option value="admin">admin</option>
+                    </select>
+                  ) : null}
                   {u.banned ? (
                     <button
                       type="button"
