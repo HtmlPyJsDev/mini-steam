@@ -24,8 +24,13 @@ import { useAuth } from '../context/AuthContext';
 import { useTranslation } from '../i18n/I18nContext';
 import { Avatar } from '../components/Avatar';
 import { RolePill } from '../components/RolePill';
-import type { Game, User, UserRole } from '../types';
+import type { Game, RoleRequest, User, UserRole } from '../types';
 import { Loader } from '../components/Loader';
+import {
+  grantRoleRequest,
+  listRoleRequests,
+  rejectRoleRequest,
+} from '../api/shop';
 
 function formatProgress(p: UploadProgress): string {
   if (p.kind === 'presigning') return 'Requesting upload URL…';
@@ -56,7 +61,7 @@ const EMPTY_FORM: FormState = {
   gameFile: null,
 };
 
-type Tab = 'games' | 'pending' | 'users';
+type Tab = 'games' | 'pending' | 'requests' | 'users';
 
 export function AdminPage() {
   const { user: me } = useAuth();
@@ -85,6 +90,15 @@ export function AdminPage() {
         >
           {t('admin.tabsPending')}
         </button>
+        {isAdmin && (
+          <button
+            type="button"
+            className={`admin__tab${tab === 'requests' ? ' is-active' : ''}`}
+            onClick={() => setTab('requests')}
+          >
+            {t('admin.requestsTab')}
+          </button>
+        )}
         <button
           type="button"
           className={`admin__tab${tab === 'users' ? ' is-active' : ''}`}
@@ -96,8 +110,129 @@ export function AdminPage() {
 
       {tab === 'games' && isAdmin ? <GamesTab /> : null}
       {tab === 'pending' ? <PendingTab /> : null}
+      {tab === 'requests' && isAdmin ? <RequestsTab /> : null}
       {tab === 'users' ? <UsersTab meId={me?._id} canEditRoles={isAdmin} /> : null}
     </div>
+  );
+}
+
+function RequestsTab() {
+  const { t } = useTranslation();
+  const [requests, setRequests] = useState<RoleRequest[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  async function load() {
+    try {
+      const r = await listRoleRequests('requested');
+      setRequests(r);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('common.error'));
+      setRequests([]);
+    }
+  }
+
+  useEffect(() => {
+    void load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function grant(id: string) {
+    setBusy(true);
+    try {
+      await grantRoleRequest(id);
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('common.error'));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function reject(id: string) {
+    setBusy(true);
+    try {
+      await rejectRoleRequest(id);
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('common.error'));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function formatPrice(cents: number, currency: string): string {
+    if (currency === 'USD') return `$${(cents / 100).toFixed(0)}`;
+    return `${(cents / 100).toFixed(2)} ${currency}`;
+  }
+
+  return (
+    <section className="admin__list">
+      <h2>{t('admin.requests')}</h2>
+      {error ? <div className="error-banner">{error}</div> : null}
+      {requests === null ? (
+        <Loader label={t('common.loading')} />
+      ) : requests.length === 0 ? (
+        <p className="empty-state">{t('admin.requestsEmpty')}</p>
+      ) : (
+        <ul className="friend-list">
+          {requests.map((req) => {
+            const u = req.userId;
+            return (
+              <li key={req._id} className="friend-item">
+                {u ? (
+                  <Link to={`/u/${u._id}`} className="friend-item__link">
+                    <Avatar
+                      src={u.avatarUrl}
+                      name={u.displayName}
+                      email={u.email}
+                      size={40}
+                    />
+                    <div>
+                      <strong>{u.displayName || u.email.split('@')[0]}</strong>
+                      <small>{u.email}</small>
+                    </div>
+                  </Link>
+                ) : (
+                  <div className="friend-item__link">
+                    <em>(deleted user)</em>
+                  </div>
+                )}
+                <div className="request-item__details">
+                  <span className={`role-pill role-pill--${req.role}`}>
+                    {req.role === 'developer' ? 'developer' : 'security'}
+                  </span>
+                  <span className="purchase-item__price">
+                    {formatPrice(req.priceCents, req.currency)}
+                  </span>
+                  <span className="purchase-item__meta">
+                    {new Date(req.createdAt).toLocaleString()}
+                  </span>
+                </div>
+                <div className="friend-item__actions">
+                  <button
+                    type="button"
+                    className="btn btn--primary btn--small"
+                    disabled={busy}
+                    onClick={() => grant(req._id)}
+                  >
+                    {t('admin.grantRole')}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn--ghost btn--small"
+                    disabled={busy}
+                    onClick={() => reject(req._id)}
+                  >
+                    {t('admin.rejectRequest')}
+                  </button>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </section>
   );
 }
 

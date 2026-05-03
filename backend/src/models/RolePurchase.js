@@ -22,18 +22,33 @@ const rolePurchaseSchema = new mongoose.Schema(
       type: String,
       default: 'USD',
     },
-    cardLast4: {
-      type: String,
-      maxlength: 4,
-    },
     status: {
       type: String,
-      enum: ['completed', 'failed'],
-      default: 'completed',
+      enum: ['requested', 'granted', 'rejected'],
+      default: 'requested',
+      index: true,
     },
     paymentProvider: {
       type: String,
-      default: 'mock',
+      default: 'telegram',
+    },
+    contactHandle: {
+      type: String,
+      default: '',
+    },
+    note: {
+      type: String,
+      maxlength: 500,
+      default: '',
+    },
+    grantedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
+    grantedAt: {
+      type: Date,
+      default: null,
     },
   },
   { timestamps: true }

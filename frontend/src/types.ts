@@ -7,14 +7,48 @@ export interface ShopRole {
   perks: string[];
 }
 
+export interface ShopContact {
+  provider: 'telegram';
+  handle: string;
+  url: string;
+}
+
+export type RolePurchaseStatus = 'requested' | 'granted' | 'rejected';
+
 export interface RolePurchase {
   _id: string;
   role: 'developer' | 'security';
   priceCents: number;
   currency: string;
-  cardLast4?: string;
-  status: 'completed' | 'failed';
+  status: RolePurchaseStatus;
+  paymentProvider: string;
+  contactHandle?: string;
+  note?: string;
+  grantedAt?: string | null;
   createdAt: string;
+}
+
+export interface RoleRequestUser {
+  _id: string;
+  email: string;
+  displayName?: string;
+  avatarUrl?: string;
+  role: UserRole;
+  banned?: boolean;
+}
+
+export interface RoleRequest {
+  _id: string;
+  role: 'developer' | 'security';
+  priceCents: number;
+  currency: string;
+  status: RolePurchaseStatus;
+  contactHandle?: string;
+  note?: string;
+  createdAt: string;
+  grantedAt?: string | null;
+  userId: RoleRequestUser | null;
+  grantedBy?: { _id: string; email: string; displayName?: string } | null;
 }
 
 export interface User {

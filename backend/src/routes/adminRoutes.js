@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 
 const Game = require('../models/Game');
 const User = require('../models/User');
+const RolePurchase = require('../models/RolePurchase');
 const auth = require('../middleware/auth');
 const admin = require('../middleware/admin');
 const roleGuard = require('../middleware/roleGuard');
@@ -439,6 +440,80 @@ router.post(
     ).select('-password');
     if (!user) return res.status(404).json({ message: 'User not found' });
     return res.json({ user });
+  })
+);
+
+const ROLE_RANK = { user: 0, developer: 1, security: 2, admin: 3 };
+
+router.get(
+  '/role-requests',
+  adminOrSecurity,
+  asyncHandler(async (req, res) => {
+    const status = req.query.status ? String(req.query.status) : 'requested';
+    const filter = status === 'all' ? {} : { status };
+    const requests = await RolePurchase.find(filter)
+      .sort({ createdAt: -1 })
+      .limit(200)
+      .populate('userId', 'email displayName avatarUrl role banned')
+      .populate('grantedBy', 'email displayName')
+      .lean();
+    return res.json({ requests });
+  })
+);
+
+router.post(
+  '/role-requests/:id/grant',
+  adminOnly,
+  asyncHandler(async (req, res) => {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid request id' });
+    }
+    const request = await RolePurchase.findById(req.params.id);
+    if (!request) return res.status(404).json({ message: 'Request not found' });
+    if (request.status !== 'requested') {
+      return res
+        .status(400)
+        .json({ message: 'Request is not pending' });
+    }
+
+    const target = await User.findById(request.userId);
+    if (!target) return res.status(404).json({ message: 'User not found' });
+
+    const currentRank = ROLE_RANK[target.role] ?? 0;
+    const targetRank = ROLE_RANK[request.role] ?? 0;
+    if (currentRank < targetRank) {
+      target.role = request.role;
+      await target.save();
+    }
+
+    request.status = 'granted';
+    request.grantedBy = req.user._id;
+    request.grantedAt = new Date();
+    await request.save();
+
+    return res.json({ request, user: target.toObject({ versionKey: false }) });
+  })
+);
+
+router.post(
+  '/role-requests/:id/reject',
+  adminOnly,
+  asyncHandler(async (req, res) => {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid request id' });
+    }
+    const request = await RolePurchase.findById(req.params.id);
+    if (!request) return res.status(404).json({ message: 'Request not found' });
+    if (request.status !== 'requested') {
+      return res
+        .status(400)
+        .json({ message: 'Request is not pending' });
+    }
+    request.status = 'rejected';
+    request.grantedBy = req.user._id;
+    request.grantedAt = new Date();
+    await request.save();
+    return res.json({ request });
   })
 );
 

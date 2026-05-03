@@ -1,37 +1,28 @@
 import { apiRequest } from './client';
-import type { ShopRole, RolePurchase, User } from '../types';
+import type {
+  RolePurchase,
+  RoleRequest,
+  ShopContact,
+  ShopRole,
+} from '../types';
 
-export interface CardInput {
-  number: string;
-  name: string;
-  expiry: string;
-  cvc: string;
+export interface ShopCatalog {
+  roles: ShopRole[];
+  contact: ShopContact;
 }
 
-export async function getShopRoles(): Promise<ShopRole[]> {
-  const data = await apiRequest<{ roles: ShopRole[] }>('/shop/roles');
-  return data.roles;
+export async function getShopCatalog(): Promise<ShopCatalog> {
+  return apiRequest<ShopCatalog>('/shop/roles');
 }
 
-export interface PurchaseResponse {
-  ok: boolean;
-  role: User['role'];
-  receipt: {
-    role: 'developer' | 'security';
-    priceCents: number;
-    currency: string;
-    cardLast4: string;
-  };
-}
-
-export async function purchaseRole(
+export async function requestRole(
   role: 'developer' | 'security',
-  card: CardInput
-): Promise<PurchaseResponse> {
-  return apiRequest<PurchaseResponse>('/shop/purchase', {
+  note?: string
+): Promise<{ purchase: RolePurchase }> {
+  return apiRequest<{ purchase: RolePurchase }>('/shop/request', {
     method: 'POST',
     auth: true,
-    body: { role, card },
+    body: { role, note },
   });
 }
 
@@ -40,4 +31,30 @@ export async function getMyPurchases(): Promise<RolePurchase[]> {
     auth: true,
   });
   return data.purchases;
+}
+
+export async function listRoleRequests(
+  status: 'requested' | 'granted' | 'rejected' | 'all' = 'requested'
+): Promise<RoleRequest[]> {
+  const data = await apiRequest<{ requests: RoleRequest[] }>(
+    `/admin/role-requests?status=${encodeURIComponent(status)}`,
+    { auth: true }
+  );
+  return data.requests;
+}
+
+export async function grantRoleRequest(id: string): Promise<RoleRequest> {
+  const data = await apiRequest<{ request: RoleRequest }>(
+    `/admin/role-requests/${id}/grant`,
+    { method: 'POST', auth: true }
+  );
+  return data.request;
+}
+
+export async function rejectRoleRequest(id: string): Promise<RoleRequest> {
+  const data = await apiRequest<{ request: RoleRequest }>(
+    `/admin/role-requests/${id}/reject`,
+    { method: 'POST', auth: true }
+  );
+  return data.request;
 }

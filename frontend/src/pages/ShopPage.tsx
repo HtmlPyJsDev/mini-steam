@@ -1,8 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from '../i18n/I18nContext';
 import { useAuth } from '../context/AuthContext';
-import { getMyPurchases, getShopRoles, purchaseRole } from '../api/shop';
-import type { CardInput } from '../api/shop';
+import {
+  getMyPurchases,
+  getShopCatalog,
+  requestRole,
+  type ShopCatalog,
+} from '../api/shop';
 import type { RolePurchase, ShopRole } from '../types';
 
 const ROLE_RANK: Record<string, number> = {
@@ -26,50 +30,159 @@ function formatPrice(cents: number, currency: string): string {
   return `${dollars.toFixed(2)} ${currency}`;
 }
 
-function formatCardNumber(raw: string): string {
-  return raw
-    .replace(/\D/g, '')
-    .slice(0, 19)
-    .replace(/(.{4})/g, '$1 ')
-    .trim();
+const TG_ICON = (
+  <svg
+    aria-hidden="true"
+    viewBox="0 0 24 24"
+    width="20"
+    height="20"
+    fill="currentColor"
+  >
+    <path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3L19.7 4.62c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z" />
+  </svg>
+);
+
+interface CheckoutModalProps {
+  role: ShopRole;
+  contact: ShopCatalog['contact'];
+  onClose: () => void;
+  onRequested: (p: RolePurchase) => void;
 }
 
-function formatExpiry(raw: string): string {
-  const digits = raw.replace(/\D/g, '').slice(0, 4);
-  if (digits.length <= 2) return digits;
-  return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+function CheckoutModal({ role, contact, onClose, onRequested }: CheckoutModalProps) {
+  const { t } = useTranslation();
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const price = formatPrice(role.priceCents, role.currency);
+
+  const roleNameKey =
+    role.id === 'developer' ? 'shop.roleDeveloperName' : 'shop.roleSecurityName';
+
+  async function handleNotify() {
+    setSubmitting(true);
+    setError(null);
+    try {
+      const res = await requestRole(role.id);
+      onRequested(res.purchase);
+    } catch (err) {
+      const e = err as Error;
+      if (e.message === 'REQUEST_ALREADY_PENDING') {
+        setError(t('shop.requestAlreadyPending'));
+      } else if (e.message === 'ROLE_ALREADY_OWNED') {
+        setError(t('shop.youHaveRole'));
+      } else {
+        setError(e.message || t('common.error'));
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div
+      className="modal-overlay"
+      role="dialog"
+      aria-modal="true"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div className="checkout-modal checkout-modal--tg">
+        <button
+          type="button"
+          className="checkout-modal__close"
+          aria-label={t('shop.cancel')}
+          onClick={onClose}
+        >
+          ✕
+        </button>
+
+        <header className="checkout-modal__header">
+          <span className={`role-pill role-pill--${role.id}`}>
+            {t(roleNameKey)}
+          </span>
+          <h2>{t('shop.tgTitle')}</h2>
+          <p className="checkout-modal__price-line">
+            <span>{t('shop.priceLabel')}</span>
+            <strong>{price}</strong>
+          </p>
+        </header>
+
+        <ol className="tg-steps">
+          <li>
+            <span className="tg-steps__num">1</span>
+            <div>
+              <strong>{t('shop.tgStep1Title')}</strong>
+              <p>{t('shop.tgStep1Desc').replace('{handle}', `@${contact.handle}`)}</p>
+            </div>
+          </li>
+          <li>
+            <span className="tg-steps__num">2</span>
+            <div>
+              <strong>
+                {t('shop.tgStep2Title').replace('{price}', price)}
+              </strong>
+              <p>{t('shop.tgStep2Desc')}</p>
+            </div>
+          </li>
+          <li>
+            <span className="tg-steps__num">3</span>
+            <div>
+              <strong>{t('shop.tgStep3Title')}</strong>
+              <p>{t('shop.tgStep3Desc')}</p>
+            </div>
+          </li>
+        </ol>
+
+        {error && <div className="error-banner">{error}</div>}
+
+        <div className="checkout-modal__actions checkout-modal__actions--stack">
+          <a
+            href={contact.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn btn--primary tg-button"
+          >
+            {TG_ICON}
+            <span>{t('shop.openTelegram').replace('{handle}', `@${contact.handle}`)}</span>
+          </a>
+          <button
+            type="button"
+            className="btn btn--ghost"
+            disabled={submitting}
+            onClick={handleNotify}
+          >
+            {submitting ? t('shop.notifying') : t('shop.notifyAdmin')}
+          </button>
+        </div>
+        <p className="checkout-modal__hint">{t('shop.notifyHint')}</p>
+      </div>
+    </div>
+  );
 }
 
 export function ShopPage() {
   const { t } = useTranslation();
-  const { user, refresh } = useAuth();
-  const [roles, setRoles] = useState<ShopRole[]>([]);
-  const [loadingRoles, setLoadingRoles] = useState(true);
-  const [errorRoles, setErrorRoles] = useState<string | null>(null);
+  const { user } = useAuth();
+  const [catalog, setCatalog] = useState<ShopCatalog | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [purchases, setPurchases] = useState<RolePurchase[]>([]);
   const [activeRole, setActiveRole] = useState<ShopRole | null>(null);
-  const [card, setCard] = useState<CardInput>({
-    number: '',
-    name: '',
-    expiry: '',
-    cvc: '',
-  });
-  const [submitting, setSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    setLoadingRoles(true);
-    getShopRoles()
-      .then((r) => {
-        if (!cancelled) setRoles(r);
+    setLoading(true);
+    getShopCatalog()
+      .then((c) => {
+        if (!cancelled) setCatalog(c);
       })
       .catch((err: Error) => {
-        if (!cancelled) setErrorRoles(err.message);
+        if (!cancelled) setError(err.message);
       })
       .finally(() => {
-        if (!cancelled) setLoadingRoles(false);
+        if (!cancelled) setLoading(false);
       });
     return () => {
       cancelled = true;
@@ -92,6 +205,10 @@ export function ShopPage() {
   }, [user, success]);
 
   const userRank = user ? (ROLE_RANK[user.role] ?? 0) : 0;
+  const pendingRoles = useMemo(
+    () => new Set(purchases.filter((p) => p.status === 'requested').map((p) => p.role)),
+    [purchases]
+  );
 
   const roleNameKey = useMemo(
     () =>
@@ -110,85 +227,87 @@ export function ShopPage() {
     []
   );
 
-  function startPurchase(role: ShopRole) {
-    setActiveRole(role);
-    setCard({ number: '', name: '', expiry: '', cvc: '' });
-    setSubmitError(null);
-    setSuccess(null);
-  }
-
-  function closeCheckout() {
-    setActiveRole(null);
-    setSubmitError(null);
-  }
-
-  async function submitPurchase(e: React.FormEvent) {
-    e.preventDefault();
-    if (!activeRole) return;
-    setSubmitting(true);
-    setSubmitError(null);
-    try {
-      await purchaseRole(activeRole.id, card);
-      await refresh();
-      setSuccess(t('shop.success'));
-      setActiveRole(null);
-    } catch (err) {
-      const e = err as Error;
-      setSubmitError(
-        e.message && e.message.startsWith('CARD_')
-          ? t('shop.invalidCard')
-          : e.message || t('shop.failed')
-      );
-    } finally {
-      setSubmitting(false);
-    }
+  function statusBadge(status: RolePurchase['status']) {
+    if (status === 'granted')
+      return <span className="badge badge--success">{t('shop.statusGranted')}</span>;
+    if (status === 'rejected')
+      return <span className="badge badge--danger">{t('shop.statusRejected')}</span>;
+    return <span className="badge">{t('shop.statusRequested')}</span>;
   }
 
   return (
     <div className="container">
       <section className="shop">
-        <header className="shop__header">
-          <h1>{t('shop.title')}</h1>
-          <p className="shop__subtitle">{t('shop.subtitle')}</p>
+        <header className="shop-hero">
+          <div className="shop-hero__body">
+            <span className="shop-hero__eyebrow">{t('shop.eyebrow')}</span>
+            <h1 className="shop-hero__title">{t('shop.title')}</h1>
+            <p className="shop-hero__subtitle">{t('shop.subtitle')}</p>
+            {catalog && (
+              <a
+                className="shop-hero__contact"
+                href={catalog.contact.url}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {TG_ICON}
+                <span>@{catalog.contact.handle}</span>
+              </a>
+            )}
+          </div>
+          <div className="shop-hero__glow" aria-hidden="true" />
         </header>
 
         {success && <div className="success-banner">{success}</div>}
 
-        {loadingRoles ? (
+        {loading ? (
           <p>{t('common.loading')}</p>
-        ) : errorRoles ? (
-          <div className="error-banner">{errorRoles}</div>
-        ) : (
+        ) : error ? (
+          <div className="error-banner">{error}</div>
+        ) : catalog ? (
           <div className="shop__grid">
-            {roles.map((role) => {
+            {catalog.roles.map((role) => {
               const owned = userRank >= (ROLE_RANK[role.id] ?? 0);
+              const pending = pendingRoles.has(role.id);
               return (
                 <article key={role.id} className={`shop-card shop-card--${role.id}`}>
-                  <div className="shop-card__body">
+                  <div className="shop-card__top">
                     <span className={`role-pill role-pill--${role.id}`}>
                       {t(roleNameKey[role.id])}
                     </span>
-                    <h2 className="shop-card__title">{t(roleNameKey[role.id])}</h2>
-                    <p className="shop-card__desc">{t(roleDescKey[role.id])}</p>
-                    <ul className="shop-card__perks">
-                      {role.perks.map((perk) => (
-                        <li key={perk}>{PERK_KEY[perk] ? t(PERK_KEY[perk] as never) : perk}</li>
-                      ))}
-                    </ul>
-                  </div>
-                  <div className="shop-card__footer">
                     <span className="shop-card__price">
                       {formatPrice(role.priceCents, role.currency)}
                     </span>
+                  </div>
+                  <h2 className="shop-card__title">{t(roleNameKey[role.id])}</h2>
+                  <p className="shop-card__desc">{t(roleDescKey[role.id])}</p>
+                  <ul className="shop-card__perks">
+                    {role.perks.map((perk) => (
+                      <li key={perk}>
+                        {PERK_KEY[perk] ? t(PERK_KEY[perk] as never) : perk}
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="shop-card__footer">
                     {owned ? (
-                      <span className="shop-card__owned">{t('shop.youHaveRole')}</span>
+                      <span className="shop-card__owned">
+                        {t('shop.youHaveRole')}
+                      </span>
+                    ) : pending ? (
+                      <span className="shop-card__owned">
+                        {t('shop.statusRequested')}
+                      </span>
                     ) : (
                       <button
                         type="button"
-                        className="btn btn--primary"
-                        onClick={() => startPurchase(role)}
+                        className="btn btn--primary shop-card__buy"
+                        onClick={() => {
+                          setActiveRole(role);
+                          setSuccess(null);
+                        }}
+                        disabled={!user}
                       >
-                        {t('shop.buy')}
+                        {t('shop.buy')} · {formatPrice(role.priceCents, role.currency)}
                       </button>
                     )}
                   </div>
@@ -196,7 +315,7 @@ export function ShopPage() {
               );
             })}
           </div>
-        )}
+        ) : null}
 
         {user && (
           <section className="shop__history">
@@ -216,9 +335,9 @@ export function ShopPage() {
                       <span className="purchase-item__price">
                         {formatPrice(p.priceCents, p.currency)}
                       </span>
+                      {statusBadge(p.status)}
                     </div>
                     <div className="purchase-item__meta">
-                      {p.cardLast4 && <span>•••• {p.cardLast4}</span>}
                       <span>{new Date(p.createdAt).toLocaleString()}</span>
                     </div>
                   </li>
@@ -229,103 +348,17 @@ export function ShopPage() {
         )}
       </section>
 
-      {activeRole && (
-        <div
-          className="modal-overlay"
-          role="dialog"
-          aria-modal="true"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) closeCheckout();
+      {activeRole && catalog && (
+        <CheckoutModal
+          role={activeRole}
+          contact={catalog.contact}
+          onClose={() => setActiveRole(null)}
+          onRequested={(p) => {
+            setActiveRole(null);
+            setPurchases((arr) => [p, ...arr]);
+            setSuccess(t('shop.requestSent'));
           }}
-        >
-          <form className="checkout-modal" onSubmit={submitPurchase}>
-            <header className="checkout-modal__header">
-              <h2>{t('shop.checkoutTitle')}</h2>
-              <div className="checkout-modal__role">
-                <span className={`role-pill role-pill--${activeRole.id}`}>
-                  {t(roleNameKey[activeRole.id])}
-                </span>
-                <strong>{formatPrice(activeRole.priceCents, activeRole.currency)}</strong>
-              </div>
-            </header>
-
-            <p className="checkout-modal__demo">{t('shop.demoNotice')}</p>
-
-            <label className="field">
-              <span>{t('shop.cardName')}</span>
-              <input
-                type="text"
-                required
-                autoComplete="cc-name"
-                value={card.name}
-                onChange={(e) => setCard((c) => ({ ...c, name: e.target.value }))}
-              />
-            </label>
-
-            <label className="field">
-              <span>{t('shop.cardNumber')}</span>
-              <input
-                type="text"
-                required
-                inputMode="numeric"
-                autoComplete="cc-number"
-                placeholder="4242 4242 4242 4242"
-                value={card.number}
-                onChange={(e) =>
-                  setCard((c) => ({ ...c, number: formatCardNumber(e.target.value) }))
-                }
-              />
-            </label>
-
-            <div className="checkout-modal__row">
-              <label className="field">
-                <span>{t('shop.cardExpiry')}</span>
-                <input
-                  type="text"
-                  required
-                  inputMode="numeric"
-                  autoComplete="cc-exp"
-                  placeholder="MM/YY"
-                  value={card.expiry}
-                  onChange={(e) =>
-                    setCard((c) => ({ ...c, expiry: formatExpiry(e.target.value) }))
-                  }
-                />
-              </label>
-              <label className="field">
-                <span>{t('shop.cardCvc')}</span>
-                <input
-                  type="text"
-                  required
-                  inputMode="numeric"
-                  autoComplete="cc-csc"
-                  placeholder="123"
-                  maxLength={4}
-                  value={card.cvc}
-                  onChange={(e) =>
-                    setCard((c) => ({ ...c, cvc: e.target.value.replace(/\D/g, '') }))
-                  }
-                />
-              </label>
-            </div>
-
-            {submitError && <div className="error-banner">{submitError}</div>}
-
-            <div className="checkout-modal__actions">
-              <button
-                type="button"
-                className="btn btn--ghost"
-                onClick={closeCheckout}
-                disabled={submitting}
-              >
-                {t('shop.cancel')}
-              </button>
-              <button type="submit" className="btn btn--primary" disabled={submitting}>
-                {submitting ? t('shop.purchasing') : t('shop.payNow')}
-              </button>
-            </div>
-          </form>
-        </div>
+        />
       )}
     </div>
   );

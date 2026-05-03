@@ -161,8 +161,8 @@ export type TranslationKey =
   | 'admin.reject'
   | 'shop.title'
   | 'shop.subtitle'
+  | 'shop.eyebrow'
   | 'shop.buy'
-  | 'shop.purchasing'
   | 'shop.youHaveRole'
   | 'shop.roleDeveloperName'
   | 'shop.roleSecurityName'
@@ -173,19 +173,32 @@ export type TranslationKey =
   | 'shop.perkModerate'
   | 'shop.perkBanUsers'
   | 'shop.perkSecurityBadge'
-  | 'shop.checkoutTitle'
-  | 'shop.cardName'
-  | 'shop.cardNumber'
-  | 'shop.cardExpiry'
-  | 'shop.cardCvc'
-  | 'shop.payNow'
+  | 'shop.tgTitle'
+  | 'shop.priceLabel'
+  | 'shop.tgStep1Title'
+  | 'shop.tgStep1Desc'
+  | 'shop.tgStep2Title'
+  | 'shop.tgStep2Desc'
+  | 'shop.tgStep3Title'
+  | 'shop.tgStep3Desc'
+  | 'shop.openTelegram'
+  | 'shop.notifyAdmin'
+  | 'shop.notifying'
+  | 'shop.notifyHint'
   | 'shop.cancel'
-  | 'shop.demoNotice'
-  | 'shop.success'
-  | 'shop.failed'
-  | 'shop.invalidCard'
+  | 'shop.requestSent'
+  | 'shop.requestAlreadyPending'
+  | 'shop.statusRequested'
+  | 'shop.statusGranted'
+  | 'shop.statusRejected'
   | 'shop.history'
   | 'shop.historyEmpty'
+  | 'admin.requests'
+  | 'admin.requestsTab'
+  | 'admin.requestsEmpty'
+  | 'admin.grantRole'
+  | 'admin.rejectRequest'
+  | 'admin.requestNote'
   | 'paywall.title'
   | 'paywall.developer'
   | 'paywall.security'
@@ -353,9 +366,9 @@ const en: Dict = {
   'admin.reject': 'Reject',
   'shop.title': 'Role store',
   'shop.subtitle':
-    'Unlock new privileges. Pick a role, pay with your card, and the role is granted instantly.',
+    'Unlock new privileges. Pick a role, pay via Telegram, and the admin grants the role within minutes.',
+  'shop.eyebrow': 'Premium roles',
   'shop.buy': 'Buy',
-  'shop.purchasing': 'Processing…',
   'shop.youHaveRole': 'You already have this role.',
   'shop.roleDeveloperName': 'Developer',
   'shop.roleSecurityName': 'Security',
@@ -367,20 +380,35 @@ const en: Dict = {
   'shop.perkModerate': 'Approve / reject games on the moderation queue',
   'shop.perkBanUsers': 'Ban or unban users for abuse',
   'shop.perkSecurityBadge': 'Security badge on your profile',
-  'shop.checkoutTitle': 'Checkout',
-  'shop.cardName': 'Cardholder name',
-  'shop.cardNumber': 'Card number',
-  'shop.cardExpiry': 'Expiry (MM/YY)',
-  'shop.cardCvc': 'CVC',
-  'shop.payNow': 'Pay',
+  'shop.tgTitle': 'How to pay',
+  'shop.priceLabel': 'Amount to send',
+  'shop.tgStep1Title': 'Open Telegram',
+  'shop.tgStep1Desc': 'Message the admin {handle}.',
+  'shop.tgStep2Title': 'Send {price}',
+  'shop.tgStep2Desc':
+    'Pay through any way you agree on. Mention your account email so the admin knows who to upgrade.',
+  'shop.tgStep3Title': 'Get the role',
+  'shop.tgStep3Desc':
+    'Once the admin confirms, your role appears on your profile within a few minutes.',
+  'shop.openTelegram': 'Open Telegram · {handle}',
+  'shop.notifyAdmin': "I paid — notify the admin",
+  'shop.notifying': 'Sending…',
+  'shop.notifyHint':
+    'Optional — creates a request in the admin panel so the admin can grant the role with one click.',
   'shop.cancel': 'Cancel',
-  'shop.demoNotice':
-    'Demo mode — no real charges. Any well-formed card details will work.',
-  'shop.success': 'Payment successful — role granted!',
-  'shop.failed': 'Payment failed',
-  'shop.invalidCard': 'Please check your card details.',
+  'shop.requestSent': 'Request sent. The admin will review it shortly.',
+  'shop.requestAlreadyPending': 'You already have a pending request for this role.',
+  'shop.statusRequested': 'Awaiting admin',
+  'shop.statusGranted': 'Granted',
+  'shop.statusRejected': 'Rejected',
   'shop.history': 'Purchase history',
   'shop.historyEmpty': 'No purchases yet.',
+  'admin.requests': 'Role requests',
+  'admin.requestsTab': 'Requests',
+  'admin.requestsEmpty': 'No pending role requests.',
+  'admin.grantRole': 'Grant role',
+  'admin.rejectRequest': 'Reject',
+  'admin.requestNote': 'User note',
   'paywall.title': 'Developer access required',
   'paywall.developer':
     "You don't have the developer role. Please buy it for $10 to publish your own game.",
@@ -549,9 +577,9 @@ const ru: Dict = {
   'admin.reject': 'Отклонить',
   'shop.title': 'Магазин ролей',
   'shop.subtitle':
-    'Получите новые возможности. Выберите роль, оплатите картой — роль выдаётся сразу.',
+    'Получите новые возможности. Выберите роль, оплатите через Telegram — админ выдаст роль за считанные минуты.',
+  'shop.eyebrow': 'Премиум-роли',
   'shop.buy': 'Купить',
-  'shop.purchasing': 'Обработка…',
   'shop.youHaveRole': 'У вас уже есть эта роль.',
   'shop.roleDeveloperName': 'Developer',
   'shop.roleSecurityName': 'Security',
@@ -563,20 +591,35 @@ const ru: Dict = {
   'shop.perkModerate': 'Одобрять и отклонять игры на проверке',
   'shop.perkBanUsers': 'Банить и разбанивать пользователей',
   'shop.perkSecurityBadge': 'Бейдж Security в профиле',
-  'shop.checkoutTitle': 'Оплата',
-  'shop.cardName': 'Имя на карте',
-  'shop.cardNumber': 'Номер карты',
-  'shop.cardExpiry': 'Срок (MM/YY)',
-  'shop.cardCvc': 'CVC',
-  'shop.payNow': 'Оплатить',
+  'shop.tgTitle': 'Как оплатить',
+  'shop.priceLabel': 'Сумма к оплате',
+  'shop.tgStep1Title': 'Откройте Telegram',
+  'shop.tgStep1Desc': 'Напишите админу {handle}.',
+  'shop.tgStep2Title': 'Отправьте {price}',
+  'shop.tgStep2Desc':
+    'Оплатите удобным для вас способом. Укажите ваш email, чтобы админ знал, кому выдать роль.',
+  'shop.tgStep3Title': 'Получите роль',
+  'shop.tgStep3Desc':
+    'После подтверждения админом роль появится у вас в профиле в течение нескольких минут.',
+  'shop.openTelegram': 'Открыть Telegram · {handle}',
+  'shop.notifyAdmin': 'Я оплатил — сообщить админу',
+  'shop.notifying': 'Отправляем…',
+  'shop.notifyHint':
+    'Необязательно — создаёт заявку в админке, чтобы админ мог выдать роль одной кнопкой.',
   'shop.cancel': 'Отмена',
-  'shop.demoNotice':
-    'Демо-режим — реальные деньги не списываются. Любые корректно заполненные данные карты подойдут.',
-  'shop.success': 'Оплата прошла — роль выдана!',
-  'shop.failed': 'Не удалось оплатить',
-  'shop.invalidCard': 'Проверьте данные карты.',
+  'shop.requestSent': 'Заявка отправлена. Админ скоро её рассмотрит.',
+  'shop.requestAlreadyPending': 'У вас уже есть заявка на эту роль.',
+  'shop.statusRequested': 'Ждёт админа',
+  'shop.statusGranted': 'Выдана',
+  'shop.statusRejected': 'Отклонена',
   'shop.history': 'История покупок',
   'shop.historyEmpty': 'Покупок пока нет.',
+  'admin.requests': 'Заявки на роли',
+  'admin.requestsTab': 'Заявки',
+  'admin.requestsEmpty': 'Заявок на роли нет.',
+  'admin.grantRole': 'Выдать роль',
+  'admin.rejectRequest': 'Отклонить',
+  'admin.requestNote': 'Комментарий пользователя',
   'paywall.title': 'Нужна роль Developer',
   'paywall.developer':
     'У вас нет роли developer. Пожалуйста, купите её за $10, чтобы опубликовать свою игру.',
@@ -746,9 +789,9 @@ const uz: Dict = {
   'admin.reject': 'Rad etish',
   'shop.title': "Rollar do'koni",
   'shop.subtitle':
-    "Yangi imkoniyatlarni oching. Rolni tanlang, karta orqali to'lang — rol darhol beriladi.",
+    "Yangi imkoniyatlarni oching. Rolni tanlang, Telegram orqali to'lang — admin bir necha daqiqada rolni beradi.",
+  'shop.eyebrow': 'Premium rollar',
   'shop.buy': 'Sotib olish',
-  'shop.purchasing': 'Bajarilmoqda…',
   'shop.youHaveRole': 'Sizda bu rol allaqachon bor.',
   'shop.roleDeveloperName': 'Developer',
   'shop.roleSecurityName': 'Security',
@@ -761,20 +804,35 @@ const uz: Dict = {
   'shop.perkModerate': "O'yinlarni tasdiqlash / rad etish",
   'shop.perkBanUsers': 'Foydalanuvchilarni bloklash / blokdan chiqarish',
   'shop.perkSecurityBadge': 'Profilda Security belgisi',
-  'shop.checkoutTitle': "To'lov",
-  'shop.cardName': 'Karta egasi',
-  'shop.cardNumber': 'Karta raqami',
-  'shop.cardExpiry': 'Muddati (MM/YY)',
-  'shop.cardCvc': 'CVC',
-  'shop.payNow': "To'lash",
+  'shop.tgTitle': "Qanday to'lash",
+  'shop.priceLabel': "To'lov summasi",
+  'shop.tgStep1Title': 'Telegramni oching',
+  'shop.tgStep1Desc': 'Adminga {handle} yozing.',
+  'shop.tgStep2Title': "{price} yuboring",
+  'shop.tgStep2Desc':
+    "O'zingizga qulay yo'l bilan to'lang. Admin kimga rol berishini bilishi uchun emailingizni yozing.",
+  'shop.tgStep3Title': 'Rolni oling',
+  'shop.tgStep3Desc':
+    "Admin tasdiqlagandan so'ng rol bir necha daqiqa ichida profilingizda paydo bo'ladi.",
+  'shop.openTelegram': 'Telegramni ochish · {handle}',
+  'shop.notifyAdmin': "To'ladim — adminga xabar bering",
+  'shop.notifying': 'Yuborilmoqda…',
+  'shop.notifyHint':
+    "Ixtiyoriy — admin paneliga so'rov yaratadi, shunda admin bir tugma bilan rolni bera oladi.",
   'shop.cancel': 'Bekor qilish',
-  'shop.demoNotice':
-    "Demo rejim — haqiqiy pul yechilmaydi. Har qanday to'g'ri to'ldirilgan karta ishlaydi.",
-  'shop.success': "To'lov muvaffaqiyatli — rol berildi!",
-  'shop.failed': "To'lov amalga oshmadi",
-  'shop.invalidCard': "Karta ma'lumotlarini tekshiring.",
+  'shop.requestSent': "So'rov yuborildi. Admin tez orada ko'rib chiqadi.",
+  'shop.requestAlreadyPending': "Sizda bu rol uchun allaqachon so'rov bor.",
+  'shop.statusRequested': 'Admin kutmoqda',
+  'shop.statusGranted': 'Berildi',
+  'shop.statusRejected': 'Rad etildi',
   'shop.history': 'Sotib olish tarixi',
   'shop.historyEmpty': "Hali xaridlar yo'q.",
+  'admin.requests': "Rol so'rovlari",
+  'admin.requestsTab': "So'rovlar",
+  'admin.requestsEmpty': "Kutilayotgan rol so'rovlari yo'q.",
+  'admin.grantRole': 'Rolni berish',
+  'admin.rejectRequest': 'Rad etish',
+  'admin.requestNote': 'Foydalanuvchi izohi',
   'paywall.title': 'Developer kirish kerak',
   'paywall.developer':
     "Sizda developer roli yo'q. O'z o'yiningizni chiqarish uchun uni $10 ga sotib oling.",
