@@ -1,0 +1,86 @@
+# Render Blueprint for Mini Steam
+# Docs: https://render.com/docs/blueprint-spec
+#
+# After connecting this repo as a Blueprint in Render:
+#   1. Render will create both services automatically.
+#   2. Open each service -> Environment tab and fill in the secrets marked
+#      `sync: false` (MONGODB_URI, JWT_SECRET, R2_*, CLIENT_URL, VITE_API_URL).
+#   3. After the first deploy you'll know each service's public URL — set:
+#        - backend  CLIENT_URL    = https://<frontend>.onrender.com
+#        - frontend VITE_API_URL  = https://<backend>.onrender.com/api
+#      then redeploy both services.
+#
+# DO NOT put real secret values in this file. Configure them in the Render
+# dashboard so they are stored securely and never committed to git.
+
+services:
+  # ----- Backend (Node + Express) -----
+  - type: web
+    name: mini-steam-backend
+    runtime: node
+    rootDir: backend
+    plan: free
+    region: frankfurt
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: PORT
+        value: "10000"
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CLIENT_URL
+        sync: false
+      # ----- Cloudflare R2 (required for admin uploads / downloads) -----
+      - key: R2_ACCOUNT_ID
+        sync: false
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false
+      - key: R2_BUCKET_NAME
+        sync: false
+      - key: R2_PUBLIC_BASE_URL
+        sync: false
+      - key: R2_USE_PRESIGNED_URLS
+        value: "false"
+      - key: PRESIGNED_URL_TTL_SECONDS
+        value: "3600"
+      # Used only by `npm run seed:admin`.
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+
+  # ----- Frontend (React static site) -----
+  - type: web
+    name: mini-steam-frontend
+    runtime: static
+    rootDir: frontend
+    plan: free
+    region: frankfurt
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: VITE_API_URL
+        sync: false
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: SAMEORIGIN
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+    routes:
+      # SPA fallback so React Router client-side routes resolve.
+      - type: rewrite
+        source: /*
+        destination: /index.html
