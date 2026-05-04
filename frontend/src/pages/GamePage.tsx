@@ -5,6 +5,7 @@ import type { Game } from '../types';
 import { Loader } from '../components/Loader';
 import { StarRating } from '../components/StarRating';
 import { GameReviews } from '../components/GameReviews';
+import { FpsEstimator } from '../components/FpsEstimator';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from '../i18n/I18nContext';
 
@@ -149,6 +150,8 @@ export function GamePage() {
           <h2>{t('game.about')}</h2>
           <p>{game.description}</p>
         </section>
+
+        <FpsEstimator gameTier={game.gpuTier ?? 0} />
 
         <GameReviews gameId={game._id} />
       </article>

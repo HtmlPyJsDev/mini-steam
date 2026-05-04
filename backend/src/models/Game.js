@@ -48,6 +48,12 @@ const gameSchema = new mongoose.Schema(
       default: 'approved',
       index: true,
     },
+    gpuTier: {
+      type: Number,
+      min: 0,
+      max: 5,
+      default: 0,
+    },
   },
   { timestamps: true }
 );

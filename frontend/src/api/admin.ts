@@ -6,6 +6,7 @@ export interface AdminGamePayload {
   title: string;
   description: string;
   license: string;
+  gpuTier?: number;
   cover?: File | null;
   screenshots?: File[];
   gameFile?: File | null;
@@ -43,6 +44,9 @@ function buildFormData(
   fd.append('title', payload.title);
   fd.append('description', payload.description);
   fd.append('license', payload.license);
+  if (typeof payload.gpuTier === 'number') {
+    fd.append('gpuTier', String(payload.gpuTier));
+  }
 
   if (payload.cover) {
     fd.append('cover', payload.cover);

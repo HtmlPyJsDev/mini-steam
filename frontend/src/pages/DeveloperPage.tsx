@@ -25,6 +25,7 @@ export function DeveloperPage() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [license, setLicense] = useState('');
+  const [gpuTier, setGpuTier] = useState<number>(3);
   const [cover, setCover] = useState<File | null>(null);
   const [screenshots, setScreenshots] = useState<File[]>([]);
   const [gameFile, setGameFile] = useState<File | null>(null);
@@ -86,6 +87,7 @@ export function DeveloperPage() {
         title: title.trim(),
         description,
         license: license.trim(),
+        gpuTier,
         cover,
         screenshots,
         gameFileKey: resolved.key,
@@ -178,6 +180,20 @@ export function DeveloperPage() {
                   onChange={(e) => setLicense(e.target.value)}
                   required
                 />
+              </label>
+              <label className="field">
+                <span>{t('admin.gpuTier')}</span>
+                <select
+                  value={gpuTier}
+                  onChange={(e) => setGpuTier(Number(e.target.value))}
+                >
+                  <option value={1}>1 — pixel art / 2D</option>
+                  <option value={2}>2 — small 3D</option>
+                  <option value={3}>3 — mainstream 3D</option>
+                  <option value={4}>4 — AAA mid</option>
+                  <option value={5}>5 — AAA heavy</option>
+                </select>
+                <small className="field__hint">{t('admin.gpuTierHint')}</small>
               </label>
               <label className="field">
                 <span>{t('developer.coverImage')}</span>

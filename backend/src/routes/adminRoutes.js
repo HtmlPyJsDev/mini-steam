@@ -208,6 +208,13 @@ router.post(
       return res.status(400).json({ message: 'gameFileSize must be a non-negative number' });
     }
 
+    const gpuTierRaw = req.body.gpuTier;
+    let gpuTier = 0;
+    if (gpuTierRaw !== undefined && gpuTierRaw !== '') {
+      const t = Math.round(Number(gpuTierRaw));
+      if (Number.isFinite(t) && t >= 0 && t <= 5) gpuTier = t;
+    }
+
     const game = await Game.create({
       title: String(req.body.title).trim(),
       description: String(req.body.description),
@@ -219,6 +226,7 @@ router.post(
       size,
       uploaderId: req.user._id,
       status: 'approved',
+      gpuTier,
     });
 
     return res.status(201).json({ game });
@@ -243,6 +251,10 @@ router.put(
         return res.status(400).json({ message: 'License cannot be empty' });
       }
       game.license = lic;
+    }
+    if (req.body.gpuTier !== undefined && req.body.gpuTier !== '') {
+      const t = Math.round(Number(req.body.gpuTier));
+      if (Number.isFinite(t) && t >= 0 && t <= 5) game.gpuTier = t;
     }
 
     const coverFile = req.files && req.files.cover && req.files.cover[0];

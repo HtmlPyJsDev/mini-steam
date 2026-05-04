@@ -47,6 +47,7 @@ interface FormState {
   title: string;
   description: string;
   license: string;
+  gpuTier: number;
   cover: File | null;
   screenshots: File[];
   gameFile: File | null;
@@ -56,6 +57,7 @@ const EMPTY_FORM: FormState = {
   title: '',
   description: '',
   license: '',
+  gpuTier: 3,
   cover: null,
   screenshots: [],
   gameFile: null,
@@ -237,6 +239,7 @@ function RequestsTab() {
 }
 
 function GamesTab() {
+  const { t } = useTranslation();
   const [games, setGames] = useState<Game[] | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
@@ -272,6 +275,7 @@ function GamesTab() {
       title: game.title,
       description: game.description,
       license: game.license,
+      gpuTier: typeof game.gpuTier === 'number' ? game.gpuTier : 3,
       cover: null,
       screenshots: [],
       gameFile: null,
@@ -318,6 +322,7 @@ function GamesTab() {
       title: form.title.trim(),
       description: form.description,
       license: form.license.trim(),
+      gpuTier: form.gpuTier,
       cover: form.cover,
       screenshots: form.screenshots,
       gameFile: form.gameFile,
@@ -395,6 +400,23 @@ function GamesTab() {
               placeholder="e.g. GPL-3.0, MIT, CC0, Public Domain, Freeware (developer-approved)"
               required
             />
+          </label>
+
+          <label className="field">
+            <span>{t('admin.gpuTier')}</span>
+            <select
+              value={form.gpuTier}
+              onChange={(e) =>
+                setForm((s) => ({ ...s, gpuTier: Number(e.target.value) }))
+              }
+            >
+              <option value={1}>1 — pixel art / 2D</option>
+              <option value={2}>2 — small 3D</option>
+              <option value={3}>3 — mainstream 3D (CS:GO, Dota 2)</option>
+              <option value={4}>4 — AAA mid (GTA V, Witcher 3)</option>
+              <option value={5}>5 — AAA heavy (Crysis, Cyberpunk)</option>
+            </select>
+            <small className="field__hint">{t('admin.gpuTierHint')}</small>
           </label>
 
           <label className="field">

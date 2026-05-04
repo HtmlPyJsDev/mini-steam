@@ -20,11 +20,34 @@ export type TranslationKey =
   | 'nav.messages'
   | 'nav.developer'
   | 'footer.text'
+  | 'catalog.heroEyebrow'
   | 'catalog.heroTitle'
   | 'catalog.heroSubtitle'
+  | 'catalog.heroBadge1'
+  | 'catalog.heroBadge2'
+  | 'catalog.heroBadge3'
   | 'catalog.loading'
   | 'catalog.empty'
   | 'catalog.failed'
+  | 'fps.title'
+  | 'fps.subtitle'
+  | 'fps.detect'
+  | 'fps.detecting'
+  | 'fps.yourGpu'
+  | 'fps.pickGpu'
+  | 'fps.preset.weak'
+  | 'fps.preset.entry'
+  | 'fps.preset.mid'
+  | 'fps.preset.high'
+  | 'fps.preset.flagship'
+  | 'fps.lowSettings'
+  | 'fps.medSettings'
+  | 'fps.highSettings'
+  | 'fps.unsupported'
+  | 'fps.not_set'
+  | 'fps.note'
+  | 'admin.gpuTier'
+  | 'admin.gpuTierHint'
   | 'catalog.uploadedBy'
   | 'auth.signInTitle'
   | 'auth.signInSubtitle'
@@ -236,13 +259,40 @@ const en: Dict = {
   'nav.developer': 'My game',
   'footer.text':
     'Uzisoft · A catalog for legally free and open-source games. Only games whose license permits free redistribution are listed.',
-  'catalog.heroTitle': 'Free & Open-Source Games',
+  'catalog.heroEyebrow': 'Verified · Virus-free',
+  'catalog.heroTitle': 'Play more, worry less',
   'catalog.heroSubtitle':
-    'Curated catalog of games with licenses that permit free redistribution. Browse, sign in, and download — no hidden fees, no piracy.',
+    'Every build on Uzisoft is hand-checked — no malware, no shady installers. Pick a title, hit download, play.',
+  'catalog.heroBadge1': 'Manually checked',
+  'catalog.heroBadge2': 'No viruses',
+  'catalog.heroBadge3': 'Direct downloads',
   'catalog.loading': 'Loading catalog…',
   'catalog.empty': 'No games yet. Check back soon — or sign in as admin to add the first one.',
   'catalog.failed': 'Failed to load games',
   'catalog.uploadedBy': 'by',
+  'fps.title': 'Estimated FPS on your PC',
+  'fps.subtitle':
+    'Rough estimate at 1080p based on your GPU. Real performance depends on CPU, RAM, drivers and game settings.',
+  'fps.detect': 'Detect my GPU',
+  'fps.detecting': 'Detecting…',
+  'fps.yourGpu': 'Detected GPU',
+  'fps.pickGpu': 'Or pick a class manually',
+  'fps.preset.weak': 'Weak / integrated',
+  'fps.preset.entry': 'Entry GPU (GTX 1050)',
+  'fps.preset.mid': 'Mid-range (GTX 1660 / RTX 2060)',
+  'fps.preset.high': 'High-end (RTX 3070 / 6700 XT)',
+  'fps.preset.flagship': 'Flagship (RTX 4080 / 7900 XTX)',
+  'fps.lowSettings': 'Low',
+  'fps.medSettings': 'Medium',
+  'fps.highSettings': 'High',
+  'fps.unsupported': 'Could not detect — pick a GPU class above.',
+  'fps.not_set':
+    "FPS estimate isn't configured for this game yet. Ask the uploader to set the GPU tier.",
+  'fps.note':
+    'Estimate only. Real FPS varies with CPU, RAM, drivers and resolution.',
+  'admin.gpuTier': 'GPU tier (1=light · 5=AAA)',
+  'admin.gpuTierHint':
+    'How demanding is this game? 1 = pixel art / 2D · 2 = small 3D · 3 = mainstream 3D (CS:GO) · 4 = AAA mid (GTA V) · 5 = AAA heavy (Crysis, Cyberpunk).',
   'auth.signInTitle': 'Welcome back',
   'auth.signInSubtitle': 'Sign in to download free games.',
   'auth.registerTitle': 'Create your account',
@@ -463,13 +513,40 @@ const ru: Dict = {
   'nav.developer': 'Моя игра',
   'footer.text':
     'Uzisoft · Каталог легально бесплатных и open-source игр. Здесь только игры, лицензия которых разрешает свободное распространение.',
-  'catalog.heroTitle': 'Бесплатные и open-source игры',
+  'catalog.heroEyebrow': 'Проверено · Без вирусов',
+  'catalog.heroTitle': 'Играйте, не переживая',
   'catalog.heroSubtitle':
-    'Подборка игр с лицензиями, разрешающими свободное распространение. Смотрите каталог, входите и скачивайте — без скрытых платежей и пиратства.',
+    'Каждую сборку на Uzisoft мы проверяем вручную — никаких вирусов и левых установщиков. Выбирайте, скачивайте и играйте.',
+  'catalog.heroBadge1': 'Проверено вручную',
+  'catalog.heroBadge2': 'Без вирусов',
+  'catalog.heroBadge3': 'Прямая загрузка',
   'catalog.loading': 'Загружаем каталог…',
   'catalog.empty': 'Игр пока нет. Заходите позже — или войдите как админ, чтобы добавить первую.',
   'catalog.failed': 'Не удалось загрузить игры',
   'catalog.uploadedBy': 'от',
+  'fps.title': 'Сколько FPS будет у вас',
+  'fps.subtitle':
+    'Грубая оценка на 1080p по вашей видеокарте. Реальные результаты зависят от CPU, RAM, драйверов и настроек.',
+  'fps.detect': 'Определить мою GPU',
+  'fps.detecting': 'Определяем…',
+  'fps.yourGpu': 'Ваша видеокарта',
+  'fps.pickGpu': 'Или выберите класс вручную',
+  'fps.preset.weak': 'Слабая / встроенная',
+  'fps.preset.entry': 'Начальная (GTX 1050)',
+  'fps.preset.mid': 'Средняя (GTX 1660 / RTX 2060)',
+  'fps.preset.high': 'Топовая (RTX 3070 / 6700 XT)',
+  'fps.preset.flagship': 'Флагман (RTX 4080 / 7900 XTX)',
+  'fps.lowSettings': 'Низкие',
+  'fps.medSettings': 'Средние',
+  'fps.highSettings': 'Высокие',
+  'fps.unsupported': 'Не удалось определить — выберите класс видеокарты сверху.',
+  'fps.not_set':
+    'Для этой игры оценка FPS не настроена. Попросите загрузившего указать GPU-класс.',
+  'fps.note':
+    'Только приблизительно. Реальные FPS зависят от CPU, RAM, драйверов и разрешения.',
+  'admin.gpuTier': 'GPU-класс (1=лёгкая · 5=AAA)',
+  'admin.gpuTierHint':
+    'Насколько игра тяжёлая? 1 = пиксель-арт / 2D · 2 = небольшая 3D · 3 = массовая 3D (CS:GO) · 4 = средний AAA (GTA V) · 5 = тяжёлая AAA (Crysis, Cyberpunk).',
   'auth.signInTitle': 'С возвращением',
   'auth.signInSubtitle': 'Войдите, чтобы скачивать игры.',
   'auth.registerTitle': 'Создать аккаунт',
@@ -690,14 +767,41 @@ const uz: Dict = {
   'nav.developer': "Mening o'yinim",
   'footer.text':
     "Uzisoft · Qonuniy bepul va ochiq manbali o'yinlar katalogi. Bu yerda faqat litsenziyasi erkin tarqatishga ruxsat beruvchi o'yinlar.",
-  'catalog.heroTitle': "Bepul va ochiq manbali o'yinlar",
+  'catalog.heroEyebrow': 'Tekshirilgan · Virussiz',
+  'catalog.heroTitle': "Xavotirsiz o'ynang",
   'catalog.heroSubtitle':
-    "Litsenziyasi erkin tarqatishga ruxsat beradigan o'yinlar tanlovi. Katalogni ko'ring, tizimga kiring va yuklab oling — yashirin to'lovlar yoki noqonuniy nusxalar yo'q.",
+    "Uzisoftdagi har bir o'yin qo'lda tekshiriladi — hech qanday virus yoki shubhali o'rnatuvchilar yo'q. Tanlang, yuklab oling va o'ynang.",
+  'catalog.heroBadge1': "Qo'lda tekshirilgan",
+  'catalog.heroBadge2': 'Virussiz',
+  'catalog.heroBadge3': "To'g'ridan-to'g'ri yuklash",
   'catalog.loading': 'Katalog yuklanmoqda…',
   'catalog.empty':
     "Hozircha o'yinlar yo'q. Keyinroq qayting — yoki birinchi o'yinni qo'shish uchun admin sifatida kiring.",
   'catalog.failed': "O'yinlarni yuklab bo'lmadi",
   'catalog.uploadedBy': 'tomonidan',
+  'fps.title': 'Sizning kompyuteringizda taxminiy FPS',
+  'fps.subtitle':
+    "1080p uchun GPUingizga asoslangan taxmin. Haqiqiy ko'rsatkichlar CPU, RAM, drayverlar va sozlamalarga bog'liq.",
+  'fps.detect': 'Mening GPU mni aniqlash',
+  'fps.detecting': 'Aniqlanmoqda…',
+  'fps.yourGpu': 'Aniqlangan GPU',
+  'fps.pickGpu': "Yoki qo'lda klassni tanlang",
+  'fps.preset.weak': "Zaif / o'rnatilgan",
+  'fps.preset.entry': "Boshlang'ich (GTX 1050)",
+  'fps.preset.mid': "O'rta (GTX 1660 / RTX 2060)",
+  'fps.preset.high': "Yuqori (RTX 3070 / 6700 XT)",
+  'fps.preset.flagship': 'Flagman (RTX 4080 / 7900 XTX)',
+  'fps.lowSettings': 'Past',
+  'fps.medSettings': "O'rta",
+  'fps.highSettings': 'Yuqori',
+  'fps.unsupported': "Aniqlab bo'lmadi — yuqorida GPU klassini tanlang.",
+  'fps.not_set':
+    "Bu o'yin uchun FPS bahosi sozlanmagan. Yuklovchidan GPU darajasini belgilashni so'rang.",
+  'fps.note':
+    "Faqat taxminiy. Haqiqiy FPS CPU, RAM, drayverlar va o'lchamga bog'liq.",
+  'admin.gpuTier': 'GPU darajasi (1=yengil · 5=AAA)',
+  'admin.gpuTierHint':
+    "O'yin qanchalik og'ir? 1 = piksel-art / 2D · 2 = kichik 3D · 3 = ommaviy 3D (CS:GO) · 4 = o'rta AAA (GTA V) · 5 = og'ir AAA (Crysis, Cyberpunk).",
   'auth.signInTitle': 'Xush kelibsiz',
   'auth.signInSubtitle': "Bepul o'yinlarni yuklab olish uchun tizimga kiring.",
   'auth.registerTitle': 'Hisob yaratish',

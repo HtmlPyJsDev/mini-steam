@@ -85,6 +85,7 @@ export interface Game {
   size: number;
   status?: 'approved' | 'pending' | 'rejected';
   uploaderId?: PublicUser | string | null;
+  gpuTier?: number;
   ratingAvg?: number;
   ratingCount?: number;
   createdAt?: string;
