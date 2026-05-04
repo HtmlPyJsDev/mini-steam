@@ -94,6 +94,23 @@ const userSchema = new mongoose.Schema(
       default: null,
       index: true,
     },
+    uzis: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    uzisLastTickAt: {
+      type: Date,
+      default: null,
+    },
+    uzisDailyEarned: {
+      type: Number,
+      default: 0,
+    },
+    uzisDailyDate: {
+      type: String,
+      default: '',
+    },
   },
   { timestamps: { createdAt: true, updatedAt: false } }
 );

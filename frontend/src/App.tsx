@@ -15,6 +15,7 @@ import { DeveloperPage } from './pages/DeveloperPage';
 import { AdminPage } from './pages/AdminPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { ShopPage } from './pages/ShopPage';
+import { ContestsListPage, ContestDetailPage } from './pages/ContestsPage';
 import { useTranslation } from './i18n/I18nContext';
 
 export function App() {
@@ -83,6 +84,22 @@ export function App() {
             element={
               <ProtectedRoute>
                 <ShopPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/contests"
+            element={
+              <ProtectedRoute>
+                <ContestsListPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/contests/:id"
+            element={
+              <ProtectedRoute>
+                <ContestDetailPage />
               </ProtectedRoute>
             }
           />

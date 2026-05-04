@@ -8,11 +8,16 @@ import type {
 } from '../types';
 
 // Presence
-export function heartbeat(): Promise<{ ok: boolean }> {
-  return apiRequest<{ ok: boolean }>('/social/presence/heartbeat', {
-    method: 'POST',
-    auth: true,
-  });
+export function heartbeat(): Promise<{
+  ok: boolean;
+  uzis?: number;
+  gained?: number;
+  capped?: boolean;
+}> {
+  return apiRequest<{ ok: boolean; uzis?: number; gained?: number; capped?: boolean }>(
+    '/social/presence/heartbeat',
+    { method: 'POST', auth: true }
+  );
 }
 
 export function listOnline(): Promise<{ users: PublicUser[]; onlineCount: number }> {

@@ -281,7 +281,65 @@ export type TranslationKey =
   | 'dock.groups.searchLabel'
   | 'dock.groups.searchPlaceholder'
   | 'dock.groups.createConfirm'
-  | 'dock.groups.leave';
+  | 'dock.groups.leave'
+  | 'nav.contests'
+  | 'nav.uzisBalanceTooltip'
+  | 'shop.howToEarn'
+  | 'shop.earnPresence'
+  | 'shop.earnReview'
+  | 'shop.earnContest'
+  | 'shop.earnAdmin'
+  | 'shop.buyWithUzis'
+  | 'shop.buyWithMoney'
+  | 'shop.buying'
+  | 'shop.notEnoughUzis'
+  | 'shop.notEnoughUzisShort'
+  | 'shop.uzisPurchaseSuccess'
+  | 'shop.uzisHistory'
+  | 'contests.title'
+  | 'contests.subtitle'
+  | 'contests.createButton'
+  | 'contests.hideForm'
+  | 'contests.formTitle'
+  | 'contests.formDesc'
+  | 'contests.formPrize'
+  | 'contests.formEnds'
+  | 'contests.creating'
+  | 'contests.createConfirm'
+  | 'contests.tabActive'
+  | 'contests.tabClosed'
+  | 'contests.empty'
+  | 'contests.join'
+  | 'contests.leave'
+  | 'contests.open'
+  | 'contests.confirmDelete'
+  | 'contests.confirmAward'
+  | 'contests.closed'
+  | 'contests.ended'
+  | 'contests.active'
+  | 'contests.endsAt'
+  | 'contests.backToList'
+  | 'contests.notFound'
+  | 'contests.participants'
+  | 'contests.noParticipants'
+  | 'contests.winner'
+  | 'contests.selectWinner'
+  | 'contests.adminAwardHint'
+  | 'contests.awardButton'
+  | 'admin.tabsUzis'
+  | 'admin.uzis.title'
+  | 'admin.uzis.hint'
+  | 'admin.uzis.findUser'
+  | 'admin.uzis.findPlaceholder'
+  | 'admin.uzis.amount'
+  | 'admin.uzis.note'
+  | 'admin.uzis.notePlaceholder'
+  | 'admin.uzis.granting'
+  | 'admin.uzis.grantButton'
+  | 'admin.uzis.grantSuccess'
+  | 'admin.uzis.recentTitle'
+  | 'admin.uzis.recentEmpty'
+  | 'admin.uzis.unknownUser';
 
 type Dict = Record<TranslationKey, string>;
 
@@ -577,6 +635,66 @@ const en: Dict = {
   'dock.groups.searchPlaceholder': 'Search by name or email',
   'dock.groups.createConfirm': 'Create',
   'dock.groups.leave': 'Leave group',
+  'nav.contests': 'Contests',
+  'nav.uzisBalanceTooltip': 'Your uzis balance',
+  'shop.howToEarn': 'How to earn uzis',
+  'shop.earnPresence': '+{reward} uzis every {minutes} min on the site (daily cap {cap})',
+  'shop.earnReview': '+{reward} uzis for your first detailed review on a game (≥ 30 chars)',
+  'shop.earnContest': 'Win a contest — admin awards the prize',
+  'shop.earnAdmin': 'Admin can grant uzis directly',
+  'shop.buyWithUzis': 'Buy with uzis',
+  'shop.buyWithMoney': 'Pay via Telegram',
+  'shop.buying': 'Buying…',
+  'shop.notEnoughUzis': "You don't have enough uzis. You need {need}.",
+  'shop.notEnoughUzisShort': 'Not enough uzis',
+  'shop.uzisPurchaseSuccess': 'Role granted! Welcome to {role}.',
+  'shop.uzisHistory': 'Your uzis history',
+  'contests.title': 'Contests',
+  'contests.subtitle': 'Compete for uzis prizes. Only admin can create contests.',
+  'contests.createButton': 'New contest',
+  'contests.hideForm': 'Hide form',
+  'contests.formTitle': 'Title',
+  'contests.formDesc': 'Description',
+  'contests.formPrize': 'Prize (uzis)',
+  'contests.formEnds': 'Ends at',
+  'contests.creating': 'Creating…',
+  'contests.createConfirm': 'Create contest',
+  'contests.tabActive': 'Active',
+  'contests.tabClosed': 'Closed',
+  'contests.empty': 'No contests here yet.',
+  'contests.join': 'Join',
+  'contests.leave': 'Leave',
+  'contests.open': 'Open',
+  'contests.confirmDelete': 'Delete this contest? This cannot be undone.',
+  'contests.confirmAward': 'Award the prize to selected winners?',
+  'contests.closed': 'Closed',
+  'contests.ended': 'Time is up',
+  'contests.active': 'Active',
+  'contests.endsAt': 'Ends at',
+  'contests.backToList': 'Back to contests',
+  'contests.notFound': 'Contest not found',
+  'contests.participants': 'Participants',
+  'contests.noParticipants': 'No participants yet.',
+  'contests.winner': 'winner',
+  'contests.selectWinner': 'Pick as winner',
+  'contests.adminAwardHint':
+    'Time is up. Pick winners and award the prize — uzis will be split equally.',
+  'contests.awardButton': 'Award winners',
+  'admin.tabsUzis': 'Uzis',
+  'admin.uzis.title': 'Uzis ledger',
+  'admin.uzis.hint':
+    'Find a user, enter the uzis amount (positive to grant, negative to deduct) and an optional note.',
+  'admin.uzis.findUser': 'Find user',
+  'admin.uzis.findPlaceholder': 'Search by email or display name',
+  'admin.uzis.amount': 'Amount (uzis)',
+  'admin.uzis.note': 'Note',
+  'admin.uzis.notePlaceholder': 'e.g. event prize',
+  'admin.uzis.granting': 'Saving…',
+  'admin.uzis.grantButton': 'Save change',
+  'admin.uzis.grantSuccess': '{amount} uzis to {user}. New balance: {balance}.',
+  'admin.uzis.recentTitle': 'Recent transactions',
+  'admin.uzis.recentEmpty': 'No transactions yet.',
+  'admin.uzis.unknownUser': '(unknown)',
 };
 
 const ru: Dict = {
@@ -871,6 +989,66 @@ const ru: Dict = {
   'dock.groups.searchPlaceholder': 'Поиск по имени или email',
   'dock.groups.createConfirm': 'Создать',
   'dock.groups.leave': 'Выйти из группы',
+  'nav.contests': 'Конкурсы',
+  'nav.uzisBalanceTooltip': 'Ваш баланс uzis',
+  'shop.howToEarn': 'Как заработать uzis',
+  'shop.earnPresence': '+{reward} uzis за каждые {minutes} мин на сайте (дневной кап {cap})',
+  'shop.earnReview': '+{reward} uzis за первый развёрнутый отзыв на игру (от 30 символов)',
+  'shop.earnContest': 'Победите в конкурсе — приз начисляет админ',
+  'shop.earnAdmin': 'Админ может выдать uzis напрямую',
+  'shop.buyWithUzis': 'Купить за uzis',
+  'shop.buyWithMoney': 'Оплатить через Telegram',
+  'shop.buying': 'Покупаем…',
+  'shop.notEnoughUzis': 'Недостаточно uzis. Нужно {need}.',
+  'shop.notEnoughUzisShort': 'Недостаточно uzis',
+  'shop.uzisPurchaseSuccess': 'Роль выдана! Добро пожаловать в {role}.',
+  'shop.uzisHistory': 'Ваша история uzis',
+  'contests.title': 'Конкурсы',
+  'contests.subtitle': 'Соревнуйтесь за призы в uzis. Создавать конкурсы может только админ.',
+  'contests.createButton': 'Новый конкурс',
+  'contests.hideForm': 'Скрыть форму',
+  'contests.formTitle': 'Название',
+  'contests.formDesc': 'Описание',
+  'contests.formPrize': 'Приз (uzis)',
+  'contests.formEnds': 'Завершится',
+  'contests.creating': 'Создаём…',
+  'contests.createConfirm': 'Создать конкурс',
+  'contests.tabActive': 'Активные',
+  'contests.tabClosed': 'Завершённые',
+  'contests.empty': 'Конкурсов пока нет.',
+  'contests.join': 'Участвовать',
+  'contests.leave': 'Выйти',
+  'contests.open': 'Открыть',
+  'contests.confirmDelete': 'Удалить этот конкурс? Это нельзя отменить.',
+  'contests.confirmAward': 'Выдать приз выбранным победителям?',
+  'contests.closed': 'Закрыт',
+  'contests.ended': 'Время вышло',
+  'contests.active': 'Активный',
+  'contests.endsAt': 'Завершится',
+  'contests.backToList': 'Назад к списку',
+  'contests.notFound': 'Конкурс не найден',
+  'contests.participants': 'Участники',
+  'contests.noParticipants': 'Участников пока нет.',
+  'contests.winner': 'победитель',
+  'contests.selectWinner': 'Выбрать как победителя',
+  'contests.adminAwardHint':
+    'Время вышло. Выберите победителей и выдайте приз — uzis разделятся поровну.',
+  'contests.awardButton': 'Выдать приз',
+  'admin.tabsUzis': 'Uzis',
+  'admin.uzis.title': 'Uzis-операции',
+  'admin.uzis.hint':
+    'Найдите пользователя, введите количество uzis (положительное — выдать, отрицательное — снять) и опциональную заметку.',
+  'admin.uzis.findUser': 'Найти пользователя',
+  'admin.uzis.findPlaceholder': 'Поиск по email или имени',
+  'admin.uzis.amount': 'Сумма (uzis)',
+  'admin.uzis.note': 'Заметка',
+  'admin.uzis.notePlaceholder': 'например, приз за событие',
+  'admin.uzis.granting': 'Сохраняем…',
+  'admin.uzis.grantButton': 'Сохранить',
+  'admin.uzis.grantSuccess': '{amount} uzis выдано {user}. Новый баланс: {balance}.',
+  'admin.uzis.recentTitle': 'Последние операции',
+  'admin.uzis.recentEmpty': 'Операций пока нет.',
+  'admin.uzis.unknownUser': '(неизвестный)',
 };
 
 const uz: Dict = {
@@ -1167,6 +1345,66 @@ const uz: Dict = {
   'dock.groups.searchPlaceholder': 'Ism yoki email bo\'yicha qidirish',
   'dock.groups.createConfirm': 'Yaratish',
   'dock.groups.leave': 'Guruhdan chiqish',
+  'nav.contests': 'Tanlovlar',
+  'nav.uzisBalanceTooltip': 'Sizning uzis balansingiz',
+  'shop.howToEarn': 'Uzisni qanday topish mumkin',
+  'shop.earnPresence': "Saytda har {minutes} daqiqa uchun +{reward} uzis (kunlik chegara: {cap})",
+  'shop.earnReview': "Bir o'yin uchun birinchi batafsil sharhga +{reward} uzis (≥ 30 belgi)",
+  'shop.earnContest': "Tanlovda g'olib bo'ling — sovrinni admin beradi",
+  'shop.earnAdmin': "Admin to'g'ridan-to'g'ri uzis berishi mumkin",
+  'shop.buyWithUzis': 'Uzis evaziga sotib olish',
+  'shop.buyWithMoney': "Telegram orqali to'lash",
+  'shop.buying': 'Sotib olinmoqda…',
+  'shop.notEnoughUzis': "Uzis yetarli emas. {need} kerak bo'ladi.",
+  'shop.notEnoughUzisShort': 'Uzis yetarli emas',
+  'shop.uzisPurchaseSuccess': "Rol berildi! {role}'ga xush kelibsiz.",
+  'shop.uzisHistory': 'Sizning uzis tarixingiz',
+  'contests.title': 'Tanlovlar',
+  'contests.subtitle': "Uzis sovrinlari uchun raqobatlashing. Tanlov yaratishni faqat admin amalga oshira oladi.",
+  'contests.createButton': 'Yangi tanlov',
+  'contests.hideForm': 'Formani yashirish',
+  'contests.formTitle': 'Sarlavha',
+  'contests.formDesc': 'Tavsif',
+  'contests.formPrize': 'Sovrin (uzis)',
+  'contests.formEnds': 'Tugaydi',
+  'contests.creating': 'Yaratilmoqda…',
+  'contests.createConfirm': 'Tanlovni yaratish',
+  'contests.tabActive': 'Faol',
+  'contests.tabClosed': 'Yopilgan',
+  'contests.empty': 'Hozircha tanlovlar yo\'q.',
+  'contests.join': "Qo'shilish",
+  'contests.leave': 'Chiqish',
+  'contests.open': 'Ochish',
+  'contests.confirmDelete': "Bu tanlovni o'chirilsinmi? Buni qaytarib bo'lmaydi.",
+  'contests.confirmAward': "Tanlangan g'oliblarga sovrin berilsinmi?",
+  'contests.closed': 'Yopilgan',
+  'contests.ended': 'Vaqt tugadi',
+  'contests.active': 'Faol',
+  'contests.endsAt': 'Tugaydi',
+  'contests.backToList': "Ro'yxatga qaytish",
+  'contests.notFound': 'Tanlov topilmadi',
+  'contests.participants': 'Qatnashchilar',
+  'contests.noParticipants': 'Hozircha qatnashchilar yo\'q.',
+  'contests.winner': "g'olib",
+  'contests.selectWinner': "G'olib qilib belgilash",
+  'contests.adminAwardHint':
+    "Vaqt tugadi. G'oliblarni tanlang va sovrinni bering — uzis teng taqsimlanadi.",
+  'contests.awardButton': "G'oliblarni mukofotlash",
+  'admin.tabsUzis': 'Uzis',
+  'admin.uzis.title': 'Uzis amallari',
+  'admin.uzis.hint':
+    "Foydalanuvchini toping, uzis miqdorini kiriting (musbat — berish, manfiy — yechib olish) va ixtiyoriy izoh.",
+  'admin.uzis.findUser': 'Foydalanuvchi qidirish',
+  'admin.uzis.findPlaceholder': "Email yoki ism bo'yicha qidirish",
+  'admin.uzis.amount': 'Miqdor (uzis)',
+  'admin.uzis.note': 'Izoh',
+  'admin.uzis.notePlaceholder': 'masalan, tadbir uchun sovrin',
+  'admin.uzis.granting': 'Saqlanmoqda…',
+  'admin.uzis.grantButton': 'Saqlash',
+  'admin.uzis.grantSuccess': "{user}'ga {amount} uzis berildi. Yangi balans: {balance}.",
+  'admin.uzis.recentTitle': "Yaqinda qilingan amallar",
+  'admin.uzis.recentEmpty': 'Hozircha amallar yo\'q.',
+  'admin.uzis.unknownUser': '(noma\'lum)',
 };
 
 export const TRANSLATIONS: Record<Language, Dict> = { en, ru, uz };

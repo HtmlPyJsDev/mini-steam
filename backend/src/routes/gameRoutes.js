@@ -8,6 +8,7 @@ const Review = require('../models/Review');
 const auth = require('../middleware/auth');
 const asyncHandler = require('../utils/asyncHandler');
 const { getDownloadUrl } = require('../utils/r2Upload');
+const uzisService = require('../services/uzis');
 
 const router = express.Router();
 
@@ -126,15 +127,44 @@ router.post(
     const rating = Math.round(ratingRaw);
     const text = String(req.body?.text || '').slice(0, 2000);
 
-    const review = await Review.findOneAndUpdate(
-      { gameId: game._id, userId: req.user._id },
-      { $set: { rating, text } },
-      { new: true, upsert: true, setDefaultsOnInsert: true }
-    )
+    const existing = await Review.findOne({ gameId: game._id, userId: req.user._id });
+    let uzisGained = 0;
+    let reviewDoc;
+    if (existing) {
+      existing.rating = rating;
+      existing.text = text;
+      // Reward eligibility: if not yet rewarded and new text passes threshold, reward
+      if (!existing.rewarded && text.trim().length >= 30) {
+        await uzisService.credit(req.user, uzisService.REVIEW_REWARD, 'review', {
+          note: `Review on game: ${game.title}`,
+          refId: existing._id,
+        });
+        existing.rewarded = true;
+        uzisGained = uzisService.REVIEW_REWARD;
+      }
+      await existing.save();
+      reviewDoc = existing;
+    } else {
+      const eligible = text.trim().length >= 30;
+      reviewDoc = await Review.create({
+        gameId: game._id,
+        userId: req.user._id,
+        rating,
+        text,
+        rewarded: eligible,
+      });
+      if (eligible) {
+        await uzisService.credit(req.user, uzisService.REVIEW_REWARD, 'review', {
+          note: `Review on game: ${game.title}`,
+          refId: reviewDoc._id,
+        });
+        uzisGained = uzisService.REVIEW_REWARD;
+      }
+    }
+    const populated = await Review.findById(reviewDoc._id)
       .populate('userId', 'email displayName avatarUrl role')
       .lean();
-
-    return res.status(201).json({ review });
+    return res.status(201).json({ review: populated, uzisGained });
   })
 );
 
@@ -151,6 +181,17 @@ router.delete(
     const isAdmin = req.user.role === 'admin';
     if (!isOwner && !isAdmin) {
       return res.status(403).json({ message: 'Not allowed' });
+    }
+    if (isOwner && review.rewarded) {
+      try {
+        await uzisService.debit(req.user, uzisService.REVIEW_REWARD, 'review_revoked', {
+          note: 'Deleted own rewarded review',
+          refId: review._id,
+        });
+      } catch (err) {
+        if (err.code !== 'INSUFFICIENT_UZIS') throw err;
+        // Allow deletion even if user has spent the uzis already
+      }
     }
     await review.deleteOne();
     return res.json({ ok: true });

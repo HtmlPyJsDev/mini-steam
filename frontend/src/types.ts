@@ -63,6 +63,8 @@ export interface User {
   developerGameId?: string | null;
   downloads?: Array<Game | string>;
   createdAt?: string;
+  uzis?: number;
+  uzisDailyEarned?: number;
 }
 
 export interface PublicUser {
@@ -203,4 +205,44 @@ export interface DevUpdate {
   createdAt: string;
   authorId: PublicUser | null;
   gameId: { _id: string; title: string; coverUrl: string } | null;
+}
+
+export interface UzisLedgerEntry {
+  _id: string;
+  delta: number;
+  balanceAfter: number;
+  reason: string;
+  note?: string;
+  refId?: string | null;
+  actorId?: { _id: string; email: string; displayName?: string } | string | null;
+  userId?: { _id: string; email: string; displayName?: string; avatarUrl?: string } | string;
+  createdAt: string;
+}
+
+export interface UzisBalance {
+  uzis: number;
+  dailyEarned: number;
+  dailyCap: number;
+  tickMinutes: number;
+  tickReward: number;
+  reviewReward: number;
+  roleCosts: { developer: number; security: number };
+}
+
+export interface Contest {
+  _id: string;
+  title: string;
+  description: string;
+  prize: number;
+  creatorId: string | { _id: string; email: string; displayName?: string };
+  endsAt: string;
+  status: 'active' | 'closed';
+  participantsCount: number;
+  winnersCount: number;
+  isParticipant: boolean;
+  isWinner: boolean;
+  createdAt: string;
+  participants?: PublicUser[];
+  winners?: PublicUser[];
+  creator?: PublicUser | null;
 }

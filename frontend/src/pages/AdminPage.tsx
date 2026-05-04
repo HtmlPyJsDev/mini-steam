@@ -31,6 +31,9 @@ import {
   listRoleRequests,
   rejectRoleRequest,
 } from '../api/shop';
+import { adminGrantUzis, adminListRecentLedger } from '../api/uzis';
+import { searchUsers } from '../api/users';
+import type { PublicUser, UzisLedgerEntry } from '../types';
 
 function formatProgress(p: UploadProgress): string {
   if (p.kind === 'presigning') return 'Requesting upload URL…';
@@ -63,7 +66,7 @@ const EMPTY_FORM: FormState = {
   gameFile: null,
 };
 
-type Tab = 'games' | 'pending' | 'requests' | 'users';
+type Tab = 'games' | 'pending' | 'requests' | 'users' | 'uzis';
 
 export function AdminPage() {
   const { user: me } = useAuth();
@@ -108,13 +111,219 @@ export function AdminPage() {
         >
           {t('admin.tabsUsers')}
         </button>
+        {isAdmin && (
+          <button
+            type="button"
+            className={`admin__tab${tab === 'uzis' ? ' is-active' : ''}`}
+            onClick={() => setTab('uzis')}
+          >
+            {t('admin.tabsUzis')}
+          </button>
+        )}
       </div>
 
       {tab === 'games' && isAdmin ? <GamesTab /> : null}
       {tab === 'pending' ? <PendingTab /> : null}
       {tab === 'requests' && isAdmin ? <RequestsTab /> : null}
       {tab === 'users' ? <UsersTab meId={me?._id} canEditRoles={isAdmin} /> : null}
+      {tab === 'uzis' && isAdmin ? <UzisTab /> : null}
     </div>
+  );
+}
+
+function UzisTab() {
+  const { t } = useTranslation();
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState<PublicUser[]>([]);
+  const [selected, setSelected] = useState<PublicUser | null>(null);
+  const [amount, setAmount] = useState<number>(100);
+  const [note, setNote] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [recent, setRecent] = useState<UzisLedgerEntry[]>([]);
+
+  async function reloadRecent() {
+    try {
+      const { entries } = await adminListRecentLedger();
+      setRecent(entries);
+    } catch {
+      // ignore
+    }
+  }
+
+  useEffect(() => {
+    void reloadRecent();
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (query.trim().length < 2) {
+      setResults([]);
+      return;
+    }
+    const handle = window.setTimeout(async () => {
+      try {
+        const r = await searchUsers(query.trim());
+        if (!cancelled) setResults(r.users || []);
+      } catch {
+        // ignore
+      }
+    }, 250);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(handle);
+    };
+  }, [query]);
+
+  async function handleGrant(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!selected) return;
+    setBusy(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const res = await adminGrantUzis(selected._id, Math.floor(amount), note.trim());
+      setSuccess(
+        t('admin.uzis.grantSuccess')
+          .replace('{amount}', String(amount))
+          .replace('{user}', selected.displayName || selected.email)
+          .replace('{balance}', String(res.user.uzis))
+      );
+      setNote('');
+      setAmount(100);
+      await reloadRecent();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('common.error'));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section className="admin-uzis">
+      <h2>{t('admin.uzis.title')}</h2>
+      <p className="admin-uzis__hint">{t('admin.uzis.hint')}</p>
+
+      <form className="admin-uzis__form" onSubmit={handleGrant}>
+        <label>
+          <span>{t('admin.uzis.findUser')}</span>
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder={t('admin.uzis.findPlaceholder')}
+          />
+        </label>
+        {results.length > 0 && (
+          <ul className="admin-uzis__results">
+            {results.map((u) => (
+              <li key={u._id}>
+                <button
+                  type="button"
+                  className={`admin-uzis__result${selected?._id === u._id ? ' is-selected' : ''}`}
+                  onClick={() => {
+                    setSelected(u);
+                    setQuery('');
+                    setResults([]);
+                  }}
+                >
+                  <Avatar src={u.avatarUrl} name={u.displayName} email={u.email} size={28} />
+                  <span>{u.displayName || u.email}</span>
+                  <RolePill role={u.role} />
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+        {selected && (
+          <div className="admin-uzis__selected">
+            <Avatar
+              src={selected.avatarUrl}
+              name={selected.displayName}
+              email={selected.email}
+              size={36}
+            />
+            <strong>{selected.displayName || selected.email}</strong>
+            <RolePill role={selected.role} />
+            <button
+              type="button"
+              className="btn btn--ghost"
+              onClick={() => setSelected(null)}
+            >
+              ✕
+            </button>
+          </div>
+        )}
+        <div className="admin-uzis__form-row">
+          <label>
+            <span>{t('admin.uzis.amount')}</span>
+            <input
+              type="number"
+              min={-100000}
+              max={100000}
+              step={1}
+              value={amount}
+              onChange={(e) => setAmount(Number(e.target.value) || 0)}
+            />
+          </label>
+          <label>
+            <span>{t('admin.uzis.note')}</span>
+            <input
+              type="text"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              maxLength={200}
+              placeholder={t('admin.uzis.notePlaceholder')}
+            />
+          </label>
+        </div>
+        {error && <div className="error-banner">{error}</div>}
+        {success && <div className="success-banner">{success}</div>}
+        <button
+          type="submit"
+          className="btn btn--primary"
+          disabled={busy || !selected || amount === 0}
+        >
+          {busy ? t('admin.uzis.granting') : t('admin.uzis.grantButton')}
+        </button>
+      </form>
+
+      <div className="admin-uzis__recent">
+        <h3>{t('admin.uzis.recentTitle')}</h3>
+        {recent.length === 0 ? (
+          <p className="empty-state">{t('admin.uzis.recentEmpty')}</p>
+        ) : (
+          <ul className="uzis-history__list">
+            {recent.map((entry) => {
+              const u = typeof entry.userId === 'object' ? entry.userId : null;
+              return (
+                <li key={entry._id} className="uzis-history__item">
+                  <span
+                    className={`uzis-history__delta ${entry.delta > 0 ? 'is-pos' : 'is-neg'}`}
+                  >
+                    {entry.delta > 0 ? '+' : ''}
+                    {entry.delta.toLocaleString()}
+                  </span>
+                  <span className="uzis-history__user">
+                    {u
+                      ? u.displayName || u.email
+                      : t('admin.uzis.unknownUser')}
+                  </span>
+                  <span className="uzis-history__reason">{entry.reason}</span>
+                  {entry.note ? (
+                    <span className="uzis-history__note">{entry.note}</span>
+                  ) : null}
+                  <span className="uzis-history__time">
+                    {new Date(entry.createdAt).toLocaleString()}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+    </section>
   );
 }
 

@@ -7,7 +7,8 @@ import {
   requestRole,
   type ShopCatalog,
 } from '../api/shop';
-import type { RolePurchase, ShopRole } from '../types';
+import { buyRoleWithUzis, getBalance, listLedger } from '../api/uzis';
+import type { RolePurchase, ShopRole, UzisBalance, UzisLedgerEntry } from '../types';
 
 const ROLE_RANK: Record<string, number> = {
   user: 0,
@@ -163,13 +164,17 @@ function CheckoutModal({ role, contact, onClose, onRequested }: CheckoutModalPro
 
 export function ShopPage() {
   const { t } = useTranslation();
-  const { user } = useAuth();
+  const { user, refresh } = useAuth();
   const [catalog, setCatalog] = useState<ShopCatalog | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [purchases, setPurchases] = useState<RolePurchase[]>([]);
   const [activeRole, setActiveRole] = useState<ShopRole | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [balance, setBalance] = useState<UzisBalance | null>(null);
+  const [ledger, setLedger] = useState<UzisLedgerEntry[]>([]);
+  const [buyingUzis, setBuyingUzis] = useState<string | null>(null);
+  const [uzisError, setUzisError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -199,10 +204,50 @@ export function ShopPage() {
       .catch(() => {
         // ignore
       });
+    getBalance()
+      .then((b) => {
+        if (!cancelled) setBalance(b);
+      })
+      .catch(() => {
+        // ignore
+      });
+    listLedger(20)
+      .then(({ entries }) => {
+        if (!cancelled) setLedger(entries);
+      })
+      .catch(() => {
+        // ignore
+      });
     return () => {
       cancelled = true;
     };
   }, [user, success]);
+
+  async function handleBuyWithUzis(role: 'developer' | 'security') {
+    if (!user) return;
+    setBuyingUzis(role);
+    setUzisError(null);
+    try {
+      const res = await buyRoleWithUzis(role);
+      setSuccess(t('shop.uzisPurchaseSuccess').replace('{role}', role));
+      setBalance((b) => (b ? { ...b, uzis: res.uzis } : b));
+      await refresh();
+      const lg = await listLedger(20);
+      setLedger(lg.entries);
+    } catch (err) {
+      const e = err as Error & { data?: { code?: string; need?: number } };
+      const code = e.data?.code;
+      if (code === 'INSUFFICIENT_UZIS') {
+        setUzisError(t('shop.notEnoughUzis').replace('{need}', String(e.data?.need ?? '')));
+      } else if (code === 'ROLE_ALREADY_OWNED') {
+        setUzisError(t('shop.youHaveRole'));
+      } else {
+        setUzisError(e.message || t('common.error'));
+      }
+    } finally {
+      setBuyingUzis(null);
+    }
+  }
 
   const userRank = user ? (ROLE_RANK[user.role] ?? 0) : 0;
   const pendingRoles = useMemo(
@@ -258,7 +303,36 @@ export function ShopPage() {
           <div className="shop-hero__glow" aria-hidden="true" />
         </header>
 
+        {user && balance && (
+          <section className="uzis-overview">
+            <div className="uzis-overview__balance">
+              <span className="uzis-overview__icon" aria-hidden="true">⌬</span>
+              <div>
+                <strong>{balance.uzis.toLocaleString()}</strong>
+                <span className="uzis-overview__label">uzis</span>
+              </div>
+            </div>
+            <div className="uzis-overview__earn">
+              <h3>{t('shop.howToEarn')}</h3>
+              <ul>
+                <li>
+                  ⏱ {t('shop.earnPresence')
+                    .replace('{minutes}', String(balance.tickMinutes))
+                    .replace('{reward}', String(balance.tickReward))
+                    .replace('{cap}', String(balance.dailyCap))}
+                </li>
+                <li>
+                  ⭐ {t('shop.earnReview').replace('{reward}', String(balance.reviewReward))}
+                </li>
+                <li>🏆 {t('shop.earnContest')}</li>
+                <li>👑 {t('shop.earnAdmin')}</li>
+              </ul>
+            </div>
+          </section>
+        )}
+
         {success && <div className="success-banner">{success}</div>}
+        {uzisError && <div className="error-banner">{uzisError}</div>}
 
         {loading ? (
           <p>{t('common.loading')}</p>
@@ -269,14 +343,19 @@ export function ShopPage() {
             {catalog.roles.map((role) => {
               const owned = userRank >= (ROLE_RANK[role.id] ?? 0);
               const pending = pendingRoles.has(role.id);
+              const uzisCost =
+                balance?.roleCosts?.[role.id] ??
+                (role.id === 'developer' ? 500 : role.id === 'security' ? 1000 : 0);
+              const canAffordUzis = user && balance ? balance.uzis >= uzisCost : false;
               return (
                 <article key={role.id} className={`shop-card shop-card--${role.id}`}>
                   <div className="shop-card__top">
                     <span className={`role-pill role-pill--${role.id}`}>
                       {t(roleNameKey[role.id])}
                     </span>
-                    <span className="shop-card__price">
-                      {formatPrice(role.priceCents, role.currency)}
+                    <span className="shop-card__price shop-card__price--uzis">
+                      <span aria-hidden="true">⌬</span>
+                      {uzisCost.toLocaleString()}
                     </span>
                   </div>
                   <h2 className="shop-card__title">{t(roleNameKey[role.id])}</h2>
@@ -288,27 +367,43 @@ export function ShopPage() {
                       </li>
                     ))}
                   </ul>
-                  <div className="shop-card__footer">
+                  <div className="shop-card__footer shop-card__footer--stack">
                     {owned ? (
                       <span className="shop-card__owned">
                         {t('shop.youHaveRole')}
                       </span>
-                    ) : pending ? (
-                      <span className="shop-card__owned">
-                        {t('shop.statusRequested')}
-                      </span>
                     ) : (
-                      <button
-                        type="button"
-                        className="btn btn--primary shop-card__buy"
-                        onClick={() => {
-                          setActiveRole(role);
-                          setSuccess(null);
-                        }}
-                        disabled={!user}
-                      >
-                        {t('shop.buy')} · {formatPrice(role.priceCents, role.currency)}
-                      </button>
+                      <>
+                        <button
+                          type="button"
+                          className="btn btn--primary shop-card__buy"
+                          onClick={() => handleBuyWithUzis(role.id)}
+                          disabled={!user || buyingUzis !== null || !canAffordUzis}
+                          title={
+                            !canAffordUzis && balance
+                              ? t('shop.notEnoughUzisShort')
+                              : ''
+                          }
+                        >
+                          {buyingUzis === role.id
+                            ? t('shop.buying')
+                            : `${t('shop.buyWithUzis')} · ⌬${uzisCost.toLocaleString()}`}
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn--ghost shop-card__buy-tg"
+                          onClick={() => {
+                            setActiveRole(role);
+                            setSuccess(null);
+                            setUzisError(null);
+                          }}
+                          disabled={!user || pending}
+                        >
+                          {pending
+                            ? t('shop.statusRequested')
+                            : `${t('shop.buyWithMoney')} · ${formatPrice(role.priceCents, role.currency)}`}
+                        </button>
+                      </>
                     )}
                   </div>
                 </article>
@@ -316,6 +411,31 @@ export function ShopPage() {
             })}
           </div>
         ) : null}
+
+        {user && ledger.length > 0 && (
+          <section className="uzis-history">
+            <h2>{t('shop.uzisHistory')}</h2>
+            <ul className="uzis-history__list">
+              {ledger.map((entry) => (
+                <li key={entry._id} className="uzis-history__item">
+                  <span
+                    className={`uzis-history__delta ${entry.delta > 0 ? 'is-pos' : 'is-neg'}`}
+                  >
+                    {entry.delta > 0 ? '+' : ''}
+                    {entry.delta.toLocaleString()}
+                  </span>
+                  <span className="uzis-history__reason">{entry.reason}</span>
+                  {entry.note ? (
+                    <span className="uzis-history__note">{entry.note}</span>
+                  ) : null}
+                  <span className="uzis-history__time">
+                    {new Date(entry.createdAt).toLocaleString()}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
         {user && (
           <section className="shop__history">

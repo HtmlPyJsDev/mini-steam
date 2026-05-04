@@ -25,6 +25,10 @@ const reviewSchema = new mongoose.Schema(
       default: '',
       maxlength: 2000,
     },
+    rewarded: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );

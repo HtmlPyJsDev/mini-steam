@@ -51,6 +51,11 @@ export function Navbar() {
               {t('nav.shop')}
             </NavLink>
           ) : null}
+          {user ? (
+            <NavLink to="/contests" className={({ isActive }) => (isActive ? 'is-active' : '')}>
+              {t('nav.contests')}
+            </NavLink>
+          ) : null}
           {user && (user.role === 'admin' || user.role === 'security') ? (
             <NavLink to="/admin" className={({ isActive }) => (isActive ? 'is-active' : '')}>
               {t('nav.admin')}
@@ -76,6 +81,16 @@ export function Navbar() {
           </select>
           {user ? (
             <>
+              <Link
+                to="/shop"
+                className="uzis-pill"
+                title={t('nav.uzisBalanceTooltip')}
+                aria-label={`${user.uzis ?? 0} uzis`}
+              >
+                <span className="uzis-pill__icon" aria-hidden="true">⌬</span>
+                <span className="uzis-pill__amount">{(user.uzis ?? 0).toLocaleString()}</span>
+                <span className="uzis-pill__label">uzis</span>
+              </Link>
               <Link to="/profile" className="navbar__user" aria-label={t('nav.profile')}>
                 <Avatar src={user.avatarUrl} name={user.displayName} email={user.email} size={28} />
                 <span className="navbar__email">{user.displayName || user.email}</span>

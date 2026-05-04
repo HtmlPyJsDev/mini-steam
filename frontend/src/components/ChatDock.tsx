@@ -34,7 +34,7 @@ function timeAgo(iso: string): string {
 }
 
 export function ChatDock() {
-  const { user } = useAuth();
+  const { user, refresh } = useAuth();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
@@ -78,21 +78,29 @@ export function ChatDock() {
     }
   }, [tab]);
 
-  // Heartbeat + initial load
+  // Heartbeat + initial load. When the heartbeat reports gained > 0 (uzis
+  // accrued from time on site), refresh the user so the navbar balance
+  // updates immediately.
   useEffect(() => {
     if (!user) return;
     let cancelled = false;
-    const beat = () => {
-      heartbeat().catch(() => {});
+    const beat = async () => {
+      try {
+        const res = await heartbeat();
+        if (!cancelled && res && (res as { gained?: number }).gained && (res as { gained: number }).gained > 0) {
+          void refresh();
+        }
+      } catch {
+        // ignore
+      }
     };
-    beat();
+    void beat();
     const id = window.setInterval(beat, 45000);
     return () => {
       cancelled = true;
       window.clearInterval(id);
-      void cancelled;
     };
-  }, [user]);
+  }, [user, refresh]);
 
   // Poll online users
   useEffect(() => {

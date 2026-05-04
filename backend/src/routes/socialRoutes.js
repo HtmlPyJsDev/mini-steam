@@ -11,6 +11,7 @@ const auth = require('../middleware/auth');
 const asyncHandler = require('../utils/asyncHandler');
 const { updateImageUpload } = require('../middleware/upload');
 const { buildKey, uploadBufferToR2 } = require('../utils/r2Upload');
+const uzisService = require('../services/uzis');
 
 const router = express.Router();
 
@@ -46,8 +47,16 @@ router.post(
   '/presence/heartbeat',
   auth,
   asyncHandler(async (req, res) => {
-    await User.updateOne({ _id: req.user._id }, { $set: { lastSeenAt: new Date() } });
-    return res.json({ ok: true, lastSeenAt: new Date() });
+    const user = req.user;
+    user.lastSeenAt = new Date();
+    const accrual = await uzisService.maybeAccruePresence(user);
+    return res.json({
+      ok: true,
+      lastSeenAt: user.lastSeenAt,
+      uzis: user.uzis || 0,
+      gained: accrual.gained,
+      capped: accrual.capped,
+    });
   })
 );
 
