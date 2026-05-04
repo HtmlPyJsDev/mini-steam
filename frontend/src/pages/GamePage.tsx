@@ -3,6 +3,8 @@ import { Link, useParams } from 'react-router-dom';
 import { getGame, requestDownload } from '../api/games';
 import type { Game } from '../types';
 import { Loader } from '../components/Loader';
+import { StarRating } from '../components/StarRating';
+import { GameReviews } from '../components/GameReviews';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from '../i18n/I18nContext';
 
@@ -78,6 +80,15 @@ export function GamePage() {
           </div>
           <div className="game-detail__meta">
             <h1 className="game-detail__title">{game.title}</h1>
+            {game.ratingCount && game.ratingCount > 0 ? (
+              <div className="game-detail__rating">
+                <StarRating value={game.ratingAvg ?? 0} size={20} />
+                <strong>{(game.ratingAvg ?? 0).toFixed(1)}</strong>
+                <span className="game-detail__rating-count">
+                  {game.ratingCount} {t('reviews.countSuffix')}
+                </span>
+              </div>
+            ) : null}
             <dl className="game-detail__facts">
               <div>
                 <dt>{t('game.license')}</dt>
@@ -138,6 +149,8 @@ export function GamePage() {
           <h2>{t('game.about')}</h2>
           <p>{game.description}</p>
         </section>
+
+        <GameReviews gameId={game._id} />
       </article>
     </div>
   );

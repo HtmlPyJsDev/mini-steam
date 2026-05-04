@@ -58,6 +58,22 @@ export type TranslationKey =
   | 'game.about'
   | 'game.failed'
   | 'game.loading'
+  | 'reviews.title'
+  | 'reviews.empty'
+  | 'reviews.leaveOne'
+  | 'reviews.editYours'
+  | 'reviews.rating'
+  | 'reviews.textPlaceholder'
+  | 'reviews.submit'
+  | 'reviews.update'
+  | 'reviews.sending'
+  | 'reviews.delete'
+  | 'reviews.confirmDelete'
+  | 'reviews.signInToReview'
+  | 'reviews.countSuffix'
+  | 'reviews.pickRating'
+  | 'reviews.loadError'
+  | 'reviews.submitError'
   | 'profile.title'
   | 'profile.history'
   | 'profile.empty'
@@ -259,6 +275,22 @@ const en: Dict = {
   'game.about': 'About',
   'game.failed': 'Failed to load game',
   'game.loading': 'Loading game…',
+  'reviews.title': 'Reviews',
+  'reviews.empty': 'No reviews yet — be the first to leave one.',
+  'reviews.leaveOne': 'Leave a review',
+  'reviews.editYours': 'Update your review',
+  'reviews.rating': 'Your rating',
+  'reviews.textPlaceholder': 'Share your thoughts (optional)…',
+  'reviews.submit': 'Post review',
+  'reviews.update': 'Update review',
+  'reviews.sending': 'Sending…',
+  'reviews.delete': 'Delete',
+  'reviews.confirmDelete': 'Delete this review?',
+  'reviews.signInToReview': 'Sign in to leave a review.',
+  'reviews.countSuffix': 'reviews',
+  'reviews.pickRating': 'Please pick a rating from 1 to 5 stars.',
+  'reviews.loadError': 'Failed to load reviews.',
+  'reviews.submitError': 'Failed to submit review.',
   'profile.title': 'Your profile',
   'profile.history': 'Download history',
   'profile.empty': "You haven't downloaded any games yet.",
@@ -470,6 +502,22 @@ const ru: Dict = {
   'game.about': 'Об игре',
   'game.failed': 'Не удалось загрузить игру',
   'game.loading': 'Загружаем игру…',
+  'reviews.title': 'Отзывы',
+  'reviews.empty': 'Пока нет отзывов — будьте первым.',
+  'reviews.leaveOne': 'Оставить отзыв',
+  'reviews.editYours': 'Изменить ваш отзыв',
+  'reviews.rating': 'Ваша оценка',
+  'reviews.textPlaceholder': 'Поделитесь впечатлениями (необязательно)…',
+  'reviews.submit': 'Опубликовать',
+  'reviews.update': 'Сохранить',
+  'reviews.sending': 'Отправляем…',
+  'reviews.delete': 'Удалить',
+  'reviews.confirmDelete': 'Удалить этот отзыв?',
+  'reviews.signInToReview': 'Войдите, чтобы оставить отзыв.',
+  'reviews.countSuffix': 'отзывов',
+  'reviews.pickRating': 'Поставьте оценку от 1 до 5 звёзд.',
+  'reviews.loadError': 'Не удалось загрузить отзывы.',
+  'reviews.submitError': 'Не удалось отправить отзыв.',
   'profile.title': 'Ваш профиль',
   'profile.history': 'История скачиваний',
   'profile.empty': 'Вы ещё ничего не скачали.',
@@ -682,6 +730,22 @@ const uz: Dict = {
   'game.about': "O'yin haqida",
   'game.failed': "O'yinni yuklab bo'lmadi",
   'game.loading': "O'yin yuklanmoqda…",
+  'reviews.title': 'Sharhlar',
+  'reviews.empty': "Hozircha sharh yo'q — birinchi bo'ling.",
+  'reviews.leaveOne': 'Sharh qoldirish',
+  'reviews.editYours': 'Sharhingizni yangilash',
+  'reviews.rating': 'Sizning bahoyingiz',
+  'reviews.textPlaceholder': "Fikringiz bilan o'rtoqlashing (ixtiyoriy)…",
+  'reviews.submit': "Yuborish",
+  'reviews.update': "Saqlash",
+  'reviews.sending': "Yuborilmoqda…",
+  'reviews.delete': "O'chirish",
+  'reviews.confirmDelete': "Bu sharh o'chirilsinmi?",
+  'reviews.signInToReview': "Sharh qoldirish uchun tizimga kiring.",
+  'reviews.countSuffix': "sharh",
+  'reviews.pickRating': "1 dan 5 gacha yulduz tanlang.",
+  'reviews.loadError': "Sharhlarni yuklab bo'lmadi.",
+  'reviews.submitError': "Sharhni yuborib bo'lmadi.",
   'profile.title': 'Sizning profilingiz',
   'profile.history': 'Yuklab olishlar tarixi',
   'profile.empty': "Siz hali hech qanday o'yin yuklab olmadingiz.",

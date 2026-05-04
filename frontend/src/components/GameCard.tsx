@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import type { Game } from '../types';
+import { StarRating } from './StarRating';
 
 interface GameCardProps {
   game: Game;
@@ -21,6 +22,14 @@ export function GameCard({ game }: GameCardProps) {
       </div>
       <div className="game-card__body">
         <h3 className="game-card__title">{game.title}</h3>
+        {game.ratingCount && game.ratingCount > 0 ? (
+          <div className="game-card__rating">
+            <StarRating value={game.ratingAvg ?? 0} size={14} />
+            <span>
+              {(game.ratingAvg ?? 0).toFixed(1)} · {game.ratingCount}
+            </span>
+          </div>
+        ) : null}
         <p className="game-card__desc">{shortDescription}</p>
       </div>
     </Link>

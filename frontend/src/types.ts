@@ -85,8 +85,25 @@ export interface Game {
   size: number;
   status?: 'approved' | 'pending' | 'rejected';
   uploaderId?: PublicUser | string | null;
+  ratingAvg?: number;
+  ratingCount?: number;
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface Review {
+  _id: string;
+  gameId: string;
+  rating: number;
+  text: string;
+  createdAt: string;
+  updatedAt: string;
+  userId: PublicUser | null;
+}
+
+export interface ReviewSummary {
+  avg: number;
+  count: number;
 }
 
 export interface AuthResponse {
