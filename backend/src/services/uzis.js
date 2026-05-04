@@ -83,6 +83,9 @@ async function maybeAccruePresence(user) {
   const elapsedMs = now.getTime() - new Date(user.uzisLastTickAt).getTime();
   const elapsedMinutes = Math.floor(elapsedMs / 60000);
   if (elapsedMinutes < PRESENCE_TICK_MINUTES) {
+    // No accrual yet, but the caller may have updated other fields
+    // (lastSeenAt/uzisDailyDate/uzisDailyEarned) — persist them.
+    if (user.isModified()) await user.save();
     return { gained: 0, capped: false };
   }
   const ticks = Math.floor(elapsedMinutes / PRESENCE_TICK_MINUTES);
