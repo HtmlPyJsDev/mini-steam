@@ -71,6 +71,8 @@ export interface PublicUser {
   role: UserRole;
   displayName: string;
   avatarUrl: string;
+  lastSeenAt?: string | null;
+  online?: boolean;
 }
 
 export interface Game {
@@ -143,6 +145,7 @@ export interface Conversation {
 export interface Relation {
   isMe: boolean;
   isFriend: boolean;
+  isSubscribed?: boolean;
   requestIncoming: boolean;
   requestOutgoing: boolean;
 }
@@ -156,7 +159,10 @@ export interface PublicProfile {
   avatarUrl: string;
   banned: boolean;
   createdAt?: string;
+  lastSeenAt?: string | null;
+  online?: boolean;
   friendsCount: number;
+  subscribersCount?: number;
   developerGame: { _id: string; title: string; coverUrl: string; license: string; status: string } | null;
 }
 
@@ -164,4 +170,37 @@ export interface FriendsPayload {
   friends: PublicUser[];
   requestsIncoming: PublicUser[];
   requestsOutgoing: PublicUser[];
+}
+
+export interface GlobalChatMessage {
+  _id: string;
+  text: string;
+  createdAt: string;
+  from: PublicUser | null;
+}
+
+export interface GroupChat {
+  _id: string;
+  name: string;
+  ownerId: PublicUser | string;
+  members: PublicUser[];
+  lastMessageAt?: string | null;
+  createdAt?: string;
+}
+
+export interface GroupChatMessage {
+  _id: string;
+  groupId: string;
+  text: string;
+  createdAt: string;
+  from: PublicUser | null;
+}
+
+export interface DevUpdate {
+  _id: string;
+  caption: string;
+  imageUrl: string;
+  createdAt: string;
+  authorId: PublicUser | null;
+  gameId: { _id: string; title: string; coverUrl: string } | null;
 }

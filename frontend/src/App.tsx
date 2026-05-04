@@ -1,5 +1,6 @@
 import { Route, Routes } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
+import { ChatDock } from './components/ChatDock';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { AdminRoute } from './components/AdminRoute';
 import { CatalogPage } from './pages/CatalogPage';
@@ -21,6 +22,7 @@ export function App() {
   return (
     <div className="app-shell">
       <Navbar />
+      <ChatDock />
       <main className="app-main">
         <Routes>
           <Route path="/" element={<CatalogPage />} />

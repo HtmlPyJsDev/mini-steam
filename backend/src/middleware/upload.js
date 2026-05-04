@@ -21,6 +21,16 @@ function imageFileFilter(_req, file, cb) {
   return cb(new Error(`Unexpected upload field: ${file.fieldname}`));
 }
 
+function singleImageFilter(_req, file, cb) {
+  if (file.fieldname !== 'image') {
+    return cb(new Error(`Unexpected upload field: ${file.fieldname}`));
+  }
+  if (!IMAGE_MIME_TYPES.has(file.mimetype)) {
+    return cb(new Error(`Invalid image type: ${file.mimetype}`));
+  }
+  return cb(null, true);
+}
+
 function avatarFileFilter(_req, file, cb) {
   if (file.fieldname !== 'avatar') {
     return cb(new Error(`Unexpected upload field: ${file.fieldname}`));
@@ -54,9 +64,18 @@ const gameImagesUpload = imageUploader.fields([
 
 const avatarUpload = avatarUploader.single('avatar');
 
+const singleImageUploader = multer({
+  storage,
+  fileFilter: singleImageFilter,
+  limits: { fileSize: MAX_IMAGE_SIZE },
+});
+
+const updateImageUpload = singleImageUploader.single('image');
+
 module.exports = {
   gameImagesUpload,
   avatarUpload,
+  updateImageUpload,
   MAX_IMAGE_SIZE,
   MAX_AVATAR_SIZE,
 };

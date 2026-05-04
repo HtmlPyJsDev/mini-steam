@@ -12,8 +12,15 @@ import {
   uploadDeveloperGameFile,
   createDeveloperGame,
 } from '../api/developer';
+import {
+  postUpdate,
+  listUserUpdates,
+  deleteUpdate,
+  listSubscribers,
+} from '../api/social';
+import { Avatar } from '../components/Avatar';
 import type { UploadProgress } from '../api/multipartUpload';
-import type { Game } from '../types';
+import type { DevUpdate, Game, PublicUser } from '../types';
 
 export function DeveloperPage() {
   const { user } = useAuth();
@@ -33,6 +40,31 @@ export function DeveloperPage() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
+  const [updates, setUpdates] = useState<DevUpdate[]>([]);
+  const [updateCaption, setUpdateCaption] = useState('');
+  const [updateImage, setUpdateImage] = useState<File | null>(null);
+  const [postingUpdate, setPostingUpdate] = useState(false);
+  const [updateError, setUpdateError] = useState<string | null>(null);
+  const [subscribers, setSubscribers] = useState<PublicUser[]>([]);
+
+  async function reloadUpdates(uid: string) {
+    try {
+      const r = await listUserUpdates(uid);
+      setUpdates(r.updates);
+    } catch {
+      /* ignore */
+    }
+  }
+
+  async function reloadSubscribers(uid: string) {
+    try {
+      const r = await listSubscribers(uid);
+      setSubscribers(r.subscribers);
+    } catch {
+      /* ignore */
+    }
+  }
+
   useEffect(() => {
     if (!user) return;
     if (user.role !== 'developer' && user.role !== 'admin') return;
@@ -42,6 +74,8 @@ export function DeveloperPage() {
         setGame(res.game);
       })
       .catch(() => setSlotUsed(false));
+    void reloadUpdates(user._id);
+    void reloadSubscribers(user._id);
   }, [user]);
 
   if (!user) return null;
@@ -120,6 +154,39 @@ export function DeveloperPage() {
     if (status === 'rejected')
       return <span className="badge badge--danger">{t('developer.statusRejected')}</span>;
     return <span className="badge">{t('developer.statusPending')}</span>;
+  }
+
+  async function handlePostUpdate(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setUpdateError(null);
+    const caption = updateCaption.trim();
+    if (!caption) {
+      setUpdateError(t('developer.updates.captionRequired'));
+      return;
+    }
+    setPostingUpdate(true);
+    try {
+      const fd = new FormData();
+      fd.append('caption', caption);
+      if (updateImage) fd.append('image', updateImage);
+      await postUpdate(fd);
+      setUpdateCaption('');
+      setUpdateImage(null);
+      if (user) await reloadUpdates(user._id);
+    } catch (err) {
+      setUpdateError(err instanceof Error ? err.message : t('common.error'));
+    } finally {
+      setPostingUpdate(false);
+    }
+  }
+
+  async function handleDeleteUpdate(updateId: string) {
+    try {
+      await deleteUpdate(updateId);
+      if (user) await reloadUpdates(user._id);
+    } catch (err) {
+      setUpdateError(err instanceof Error ? err.message : t('common.error'));
+    }
   }
 
   return (
@@ -247,6 +314,105 @@ export function DeveloperPage() {
             </form>
           </section>
         )}
+
+        {slotUsed ? (
+          <>
+            <section className="settings__group">
+              <h2>{t('developer.updates.postTitle')}</h2>
+              <p className="settings__hint">{t('developer.updates.postHint')}</p>
+              <form onSubmit={handlePostUpdate}>
+                <label className="field">
+                  <span>{t('developer.updates.captionLabel')}</span>
+                  <textarea
+                    rows={3}
+                    value={updateCaption}
+                    onChange={(e) => setUpdateCaption(e.target.value)}
+                    maxLength={600}
+                    placeholder={t('developer.updates.captionPlaceholder')}
+                  />
+                </label>
+                <label className="field">
+                  <span>{t('developer.updates.imageLabel')}</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setUpdateImage(e.target.files?.[0] || null)}
+                  />
+                  {updateImage ? <small>{updateImage.name}</small> : null}
+                </label>
+                {updateError ? <div className="error-banner">{updateError}</div> : null}
+                <button
+                  type="submit"
+                  className="btn btn--primary"
+                  disabled={postingUpdate || !updateCaption.trim()}
+                >
+                  {postingUpdate ? '…' : t('developer.updates.postButton')}
+                </button>
+              </form>
+            </section>
+
+            {updates.length > 0 ? (
+              <section className="settings__group">
+                <h2>{t('developer.updates.historyTitle')}</h2>
+                <div className="updates-feed">
+                  {updates.map((u) => (
+                    <article key={u._id} className="update-card">
+                      {u.imageUrl ? (
+                        <div className="update-card__image">
+                          <img src={u.imageUrl} alt="" loading="lazy" />
+                        </div>
+                      ) : null}
+                      <div className="update-card__body">
+                        <header className="update-card__head">
+                          <span className="update-card__time">
+                            {new Date(u.createdAt).toLocaleString()}
+                          </span>
+                        </header>
+                        <p className="update-card__caption">{u.caption}</p>
+                        <button
+                          type="button"
+                          className="btn btn--ghost btn--sm"
+                          onClick={() => handleDeleteUpdate(u._id)}
+                        >
+                          {t('common.delete')}
+                        </button>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </section>
+            ) : null}
+
+            <section className="settings__group">
+              <h2>
+                {t('developer.subscribersTitle')} ({subscribers.length})
+              </h2>
+              {subscribers.length === 0 ? (
+                <p className="settings__hint">{t('developer.subscribersEmpty')}</p>
+              ) : (
+                <ul className="dock__user-list">
+                  {subscribers.map((s) => (
+                    <li key={s._id}>
+                      <Link to={`/u/${s._id}`} className="dock-user">
+                        <Avatar
+                          size={32}
+                          src={s.avatarUrl}
+                          name={s.displayName}
+                          email={s.email}
+                        />
+                        <span className="dock-user__body">
+                          <span className="dock-user__name">
+                            {s.displayName || s.email.split('@')[0]}
+                          </span>
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          </>
+        ) : null}
       </section>
     </div>
   );

@@ -77,6 +77,23 @@ const userSchema = new mongoose.Schema(
         ref: 'Game',
       },
     ],
+    subscribers: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+      },
+    ],
+    subscribedTo: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+      },
+    ],
+    lastSeenAt: {
+      type: Date,
+      default: null,
+      index: true,
+    },
   },
   { timestamps: { createdAt: true, updatedAt: false } }
 );
@@ -97,6 +114,7 @@ userSchema.methods.toPublicJSON = function toPublicJSON() {
     avatarUrl: this.avatarUrl || '',
     banned: !!this.banned,
     createdAt: this.createdAt,
+    lastSeenAt: this.lastSeenAt || null,
   };
 };
 

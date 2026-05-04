@@ -37,6 +37,14 @@ async function auth(req, res, next) {
     }
 
     req.user = user;
+
+    // Update lastSeenAt at most once a minute (cheap presence tracker)
+    const now = Date.now();
+    const last = user.lastSeenAt ? new Date(user.lastSeenAt).getTime() : 0;
+    if (now - last > 60_000) {
+      User.updateOne({ _id: user._id }, { $set: { lastSeenAt: new Date(now) } }).catch(() => {});
+    }
+
     return next();
   } catch (err) {
     return next(err);

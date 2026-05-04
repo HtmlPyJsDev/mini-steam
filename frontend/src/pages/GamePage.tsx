@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { getGame, requestDownload } from '../api/games';
-import type { Game } from '../types';
+import { listGameUpdates } from '../api/social';
+import type { DevUpdate, Game } from '../types';
 import { Loader } from '../components/Loader';
 import { StarRating } from '../components/StarRating';
 import { GameReviews } from '../components/GameReviews';
 import { FpsEstimator } from '../components/FpsEstimator';
+import { Avatar } from '../components/Avatar';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from '../i18n/I18nContext';
 
@@ -29,6 +31,7 @@ export function GamePage() {
   const [error, setError] = useState<string | null>(null);
   const [activeShot, setActiveShot] = useState<string | null>(null);
   const [downloading, setDownloading] = useState<boolean>(false);
+  const [updates, setUpdates] = useState<DevUpdate[]>([]);
 
   useEffect(() => {
     if (!id) return;
@@ -45,6 +48,11 @@ export function GamePage() {
       .catch((err: unknown) => {
         if (!cancelled) setError(err instanceof Error ? err.message : t('game.failed'));
       });
+    listGameUpdates(id)
+      .then((res) => {
+        if (!cancelled) setUpdates(res.updates);
+      })
+      .catch(() => {});
     return () => {
       cancelled = true;
     };
@@ -152,6 +160,44 @@ export function GamePage() {
         </section>
 
         <FpsEstimator gameTier={game.gpuTier ?? 0} />
+
+        {updates.length > 0 ? (
+          <section className="game-detail__about">
+            <h2>{t('game.updatesTitle')}</h2>
+            <div className="updates-feed">
+              {updates.map((u) => (
+                <article key={u._id} className="update-card">
+                  {u.imageUrl ? (
+                    <div className="update-card__image">
+                      <img src={u.imageUrl} alt="" loading="lazy" />
+                    </div>
+                  ) : null}
+                  <div className="update-card__body">
+                    <header className="update-card__head">
+                      {u.authorId ? (
+                        <Link to={`/u/${u.authorId._id}`} className="update-card__author">
+                          <Avatar
+                            size={28}
+                            src={u.authorId.avatarUrl}
+                            name={u.authorId.displayName}
+                            email={u.authorId.email}
+                          />
+                          <span>
+                            {u.authorId.displayName || u.authorId.email.split('@')[0]}
+                          </span>
+                        </Link>
+                      ) : null}
+                      <span className="update-card__time">
+                        {new Date(u.createdAt).toLocaleString()}
+                      </span>
+                    </header>
+                    <p className="update-card__caption">{u.caption}</p>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+        ) : null}
 
         <GameReviews gameId={game._id} />
       </article>

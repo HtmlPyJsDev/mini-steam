@@ -9,9 +9,15 @@ import {
   rejectFriendRequest,
   removeFriend,
 } from '../api/friends';
+import {
+  subscribe as subscribeUser,
+  unsubscribe as unsubscribeUser,
+  listUserUpdates,
+  deleteUpdate,
+} from '../api/social';
 import { Avatar } from '../components/Avatar';
 import { RolePill } from '../components/RolePill';
-import type { PublicProfile, Relation } from '../types';
+import type { DevUpdate, PublicProfile, Relation } from '../types';
 
 export function PublicProfilePage() {
   const { id } = useParams<{ id: string }>();
@@ -23,6 +29,7 @@ export function PublicProfilePage() {
   const [relation, setRelation] = useState<Relation | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [updates, setUpdates] = useState<DevUpdate[]>([]);
 
   async function load() {
     if (!id) return;
@@ -36,8 +43,19 @@ export function PublicProfilePage() {
     }
   }
 
+  async function loadUpdates() {
+    if (!id) return;
+    try {
+      const res = await listUserUpdates(id);
+      setUpdates(res.updates);
+    } catch {
+      /* ignore */
+    }
+  }
+
   useEffect(() => {
     void load();
+    void loadUpdates();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
@@ -97,6 +115,12 @@ export function PublicProfilePage() {
               <span>{t('profile.friendsCount')}</span>
               <strong>{profile.friendsCount}</strong>
             </li>
+            {profile.role === 'developer' || (profile.subscribersCount ?? 0) > 0 ? (
+              <li>
+                <span>{t('profile.subscribersCount')}</span>
+                <strong>{profile.subscribersCount ?? 0}</strong>
+              </li>
+            ) : null}
             {profile.createdAt ? (
               <li>
                 <span>{t('profile.memberSince')}</span>
@@ -124,6 +148,27 @@ export function PublicProfilePage() {
         {me && !relation?.isMe ? (
           <section className="settings__group">
             <div className="profile__friend-actions">
+              {profile.role === 'developer' ? (
+                relation?.isSubscribed ? (
+                  <button
+                    type="button"
+                    className="btn btn--ghost"
+                    disabled={busy}
+                    onClick={() => action(() => unsubscribeUser(profile._id))}
+                  >
+                    ★ {t('profile.unsubscribe')}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="btn btn--primary"
+                    disabled={busy}
+                    onClick={() => action(() => subscribeUser(profile._id))}
+                  >
+                    ☆ {t('profile.subscribe')}
+                  </button>
+                )
+              ) : null}
               {relation?.isFriend ? (
                 <>
                   <button
@@ -182,6 +227,59 @@ export function PublicProfilePage() {
               )}
             </div>
             {error ? <div className="error-banner">{error}</div> : null}
+          </section>
+        ) : null}
+
+        {updates.length > 0 ? (
+          <section className="settings__group">
+            <h2>{t('profile.updatesTitle')}</h2>
+            <div className="updates-feed">
+              {updates.map((u) => (
+                <article key={u._id} className="update-card">
+                  {u.imageUrl ? (
+                    <div className="update-card__image">
+                      <img src={u.imageUrl} alt="" loading="lazy" />
+                    </div>
+                  ) : null}
+                  <div className="update-card__body">
+                    <header className="update-card__head">
+                      <Link to={`/u/${u.authorId?._id || profile._id}`} className="update-card__author">
+                        <Avatar
+                          size={28}
+                          src={u.authorId?.avatarUrl}
+                          name={u.authorId?.displayName}
+                          email={u.authorId?.email}
+                        />
+                        <span>
+                          {u.authorId?.displayName || u.authorId?.email.split('@')[0] || ''}
+                        </span>
+                      </Link>
+                      <span className="update-card__time">
+                        {new Date(u.createdAt).toLocaleString()}
+                      </span>
+                    </header>
+                    <p className="update-card__caption">{u.caption}</p>
+                    {u.gameId ? (
+                      <Link to={`/game/${u.gameId._id}`} className="update-card__game">
+                        🎮 {u.gameId.title}
+                      </Link>
+                    ) : null}
+                    {me && (me._id === (u.authorId?._id || '') || me.role === 'admin') ? (
+                      <button
+                        type="button"
+                        className="btn btn--ghost btn--sm"
+                        onClick={async () => {
+                          await deleteUpdate(u._id);
+                          await loadUpdates();
+                        }}
+                      >
+                        {t('common.delete')}
+                      </button>
+                    ) : null}
+                  </div>
+                </article>
+              ))}
+            </div>
           </section>
         ) : null}
       </section>

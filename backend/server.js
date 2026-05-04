@@ -14,6 +14,7 @@ const friendsRoutes = require('./src/routes/friendsRoutes');
 const messageRoutes = require('./src/routes/messageRoutes');
 const developerRoutes = require('./src/routes/developerRoutes');
 const shopRoutes = require('./src/routes/shopRoutes');
+const socialRoutes = require('./src/routes/socialRoutes');
 const errorHandler = require('./src/middleware/errorHandler');
 const auth = require('./src/middleware/auth');
 
@@ -45,6 +46,7 @@ app.use('/api/friends', friendsRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/developer', developerRoutes);
 app.use('/api/shop', shopRoutes);
+app.use('/api/social', socialRoutes);
 app.use('/api/admin', adminRoutes);
 
 app.use((req, res, next) => {

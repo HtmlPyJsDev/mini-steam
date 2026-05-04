@@ -242,7 +242,46 @@ export type TranslationKey =
   | 'paywall.developer'
   | 'paywall.security'
   | 'paywall.buy'
-  | 'nav.shop';
+  | 'nav.shop'
+  | 'common.delete'
+  | 'profile.subscribersCount'
+  | 'profile.subscribe'
+  | 'profile.unsubscribe'
+  | 'profile.updatesTitle'
+  | 'developer.subscribersTitle'
+  | 'developer.subscribersEmpty'
+  | 'developer.updates.postTitle'
+  | 'developer.updates.postHint'
+  | 'developer.updates.captionLabel'
+  | 'developer.updates.captionPlaceholder'
+  | 'developer.updates.captionRequired'
+  | 'developer.updates.imageLabel'
+  | 'developer.updates.postButton'
+  | 'developer.updates.historyTitle'
+  | 'game.updatesTitle'
+  | 'dock.title'
+  | 'dock.collapse'
+  | 'dock.expand'
+  | 'dock.cancel'
+  | 'dock.onlineNow'
+  | 'dock.onlineWord'
+  | 'dock.tab.chat'
+  | 'dock.tab.online'
+  | 'dock.tab.groups'
+  | 'dock.chat.empty'
+  | 'dock.chat.placeholder'
+  | 'dock.online.empty'
+  | 'dock.groups.create'
+  | 'dock.groups.empty'
+  | 'dock.groups.members'
+  | 'dock.groups.createTitle'
+  | 'dock.groups.nameLabel'
+  | 'dock.groups.namePlaceholder'
+  | 'dock.groups.nameRequired'
+  | 'dock.groups.searchLabel'
+  | 'dock.groups.searchPlaceholder'
+  | 'dock.groups.createConfirm'
+  | 'dock.groups.leave';
 
 type Dict = Record<TranslationKey, string>;
 
@@ -498,6 +537,46 @@ const en: Dict = {
     "You don't have the security role. Please buy it for $20 to access moderation tools.",
   'paywall.buy': 'Buy in the store',
   'nav.shop': 'Store',
+  'common.delete': 'Delete',
+  'profile.subscribersCount': 'Subscribers',
+  'profile.subscribe': 'Subscribe',
+  'profile.unsubscribe': 'Unsubscribe',
+  'profile.updatesTitle': 'Updates',
+  'developer.subscribersTitle': 'Subscribers',
+  'developer.subscribersEmpty': "Nobody has subscribed to you yet.",
+  'developer.updates.postTitle': 'Post an update',
+  'developer.updates.postHint':
+    'Share progress with your subscribers — attach a screenshot and a short caption.',
+  'developer.updates.captionLabel': 'Caption',
+  'developer.updates.captionPlaceholder': 'New patch coming soon: …',
+  'developer.updates.captionRequired': 'Caption is required',
+  'developer.updates.imageLabel': 'Image (optional)',
+  'developer.updates.postButton': 'Publish update',
+  'developer.updates.historyTitle': 'Your updates',
+  'game.updatesTitle': 'Latest updates from the developer',
+  'dock.title': 'Community',
+  'dock.collapse': 'Collapse',
+  'dock.expand': 'Expand',
+  'dock.cancel': 'Cancel',
+  'dock.onlineNow': 'Users online now',
+  'dock.onlineWord': 'online',
+  'dock.tab.chat': 'Chat',
+  'dock.tab.online': 'Online',
+  'dock.tab.groups': 'Groups',
+  'dock.chat.empty': 'Be the first to say hi 👋',
+  'dock.chat.placeholder': 'Message the lobby…',
+  'dock.online.empty': 'Nobody else is online right now.',
+  'dock.groups.create': 'Create group',
+  'dock.groups.empty': 'You are not in any groups yet.',
+  'dock.groups.members': 'members',
+  'dock.groups.createTitle': 'New group',
+  'dock.groups.nameLabel': 'Group name',
+  'dock.groups.namePlaceholder': 'My squad',
+  'dock.groups.nameRequired': 'Group name is required',
+  'dock.groups.searchLabel': 'Add members',
+  'dock.groups.searchPlaceholder': 'Search by name or email',
+  'dock.groups.createConfirm': 'Create',
+  'dock.groups.leave': 'Leave group',
 };
 
 const ru: Dict = {
@@ -752,6 +831,46 @@ const ru: Dict = {
     'У вас нет роли security. Пожалуйста, купите её за $20, чтобы получить доступ к модерации.',
   'paywall.buy': 'Купить в магазине',
   'nav.shop': 'Магазин',
+  'common.delete': 'Удалить',
+  'profile.subscribersCount': 'Подписчики',
+  'profile.subscribe': 'Подписаться',
+  'profile.unsubscribe': 'Отписаться',
+  'profile.updatesTitle': 'Обновления',
+  'developer.subscribersTitle': 'Подписчики',
+  'developer.subscribersEmpty': 'Пока никто не подписался на вас.',
+  'developer.updates.postTitle': 'Опубликовать обновление',
+  'developer.updates.postHint':
+    'Поделитесь прогрессом с подписчиками — прикрепите скриншот и короткую подпись.',
+  'developer.updates.captionLabel': 'Подпись',
+  'developer.updates.captionPlaceholder': 'Скоро новый патч: …',
+  'developer.updates.captionRequired': 'Подпись обязательна',
+  'developer.updates.imageLabel': 'Картинка (необязательно)',
+  'developer.updates.postButton': 'Опубликовать',
+  'developer.updates.historyTitle': 'Ваши обновления',
+  'game.updatesTitle': 'Последние обновления от разработчика',
+  'dock.title': 'Сообщество',
+  'dock.collapse': 'Свернуть',
+  'dock.expand': 'Развернуть',
+  'dock.cancel': 'Отмена',
+  'dock.onlineNow': 'Сейчас в сети',
+  'dock.onlineWord': 'в сети',
+  'dock.tab.chat': 'Чат',
+  'dock.tab.online': 'Онлайн',
+  'dock.tab.groups': 'Группы',
+  'dock.chat.empty': 'Будь первым, поздоровайся 👋',
+  'dock.chat.placeholder': 'Написать в общий чат…',
+  'dock.online.empty': 'Сейчас больше никого нет онлайн.',
+  'dock.groups.create': 'Создать группу',
+  'dock.groups.empty': 'Вы пока не в одной группе.',
+  'dock.groups.members': 'участников',
+  'dock.groups.createTitle': 'Новая группа',
+  'dock.groups.nameLabel': 'Название группы',
+  'dock.groups.namePlaceholder': 'Мой отряд',
+  'dock.groups.nameRequired': 'Название обязательно',
+  'dock.groups.searchLabel': 'Добавить участников',
+  'dock.groups.searchPlaceholder': 'Поиск по имени или email',
+  'dock.groups.createConfirm': 'Создать',
+  'dock.groups.leave': 'Выйти из группы',
 };
 
 const uz: Dict = {
@@ -1008,6 +1127,46 @@ const uz: Dict = {
     "Sizda security roli yo'q. Moderatsiya vositalariga kirish uchun uni $20 ga sotib oling.",
   'paywall.buy': "Do'konda sotib olish",
   'nav.shop': "Do'kon",
+  'common.delete': "O'chirish",
+  'profile.subscribersCount': 'Obunachilar',
+  'profile.subscribe': 'Obuna bo\'lish',
+  'profile.unsubscribe': 'Obunani bekor qilish',
+  'profile.updatesTitle': 'Yangiliklar',
+  'developer.subscribersTitle': 'Obunachilar',
+  'developer.subscribersEmpty': "Hozircha hech kim obuna bo'lmagan.",
+  'developer.updates.postTitle': 'Yangilik joylash',
+  'developer.updates.postHint':
+    "Obunachilar bilan rivojlanishni baham ko'ring — skrinshot va qisqa izoh qo'shing.",
+  'developer.updates.captionLabel': 'Izoh',
+  'developer.updates.captionPlaceholder': 'Tez orada yangi patch: …',
+  'developer.updates.captionRequired': 'Izoh majburiy',
+  'developer.updates.imageLabel': 'Rasm (ixtiyoriy)',
+  'developer.updates.postButton': 'Joylash',
+  'developer.updates.historyTitle': 'Sizning yangiliklaringiz',
+  'game.updatesTitle': 'Dasturchidan oxirgi yangiliklar',
+  'dock.title': 'Jamiyat',
+  'dock.collapse': "Yig'ish",
+  'dock.expand': 'Ochish',
+  'dock.cancel': 'Bekor qilish',
+  'dock.onlineNow': 'Hozir onlaynda',
+  'dock.onlineWord': 'onlayn',
+  'dock.tab.chat': 'Chat',
+  'dock.tab.online': 'Onlayn',
+  'dock.tab.groups': 'Guruhlar',
+  'dock.chat.empty': 'Birinchi bo\'lib salomlashing 👋',
+  'dock.chat.placeholder': 'Umumiy chatga yozing…',
+  'dock.online.empty': "Hozir boshqa hech kim onlaynda emas.",
+  'dock.groups.create': 'Guruh yaratish',
+  'dock.groups.empty': 'Siz hali biror guruhda emassiz.',
+  'dock.groups.members': "a'zolar",
+  'dock.groups.createTitle': 'Yangi guruh',
+  'dock.groups.nameLabel': 'Guruh nomi',
+  'dock.groups.namePlaceholder': 'Mening jamoam',
+  'dock.groups.nameRequired': 'Nom majburiy',
+  'dock.groups.searchLabel': "A'zolar qo'shish",
+  'dock.groups.searchPlaceholder': 'Ism yoki email bo\'yicha qidirish',
+  'dock.groups.createConfirm': 'Yaratish',
+  'dock.groups.leave': 'Guruhdan chiqish',
 };
 
 export const TRANSLATIONS: Record<Language, Dict> = { en, ru, uz };

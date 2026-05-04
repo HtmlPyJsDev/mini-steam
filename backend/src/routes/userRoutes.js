@@ -38,7 +38,7 @@ router.get(
       return res.status(400).json({ message: 'Invalid user id' });
     }
     const user = await User.findById(req.params.id).select(
-      'email role displayName bio avatarUrl banned developerGameId friends createdAt'
+      'email role displayName bio avatarUrl banned developerGameId friends subscribers createdAt lastSeenAt'
     );
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
@@ -54,10 +54,16 @@ router.get(
     const me = req.user._id.toString();
     const targetId = user._id.toString();
     const friendIds = (user.friends || []).map((f) => f.toString());
+    const subscriberIds = (user.subscribers || []).map((f) => f.toString());
     const isMe = me === targetId;
     const isFriend = friendIds.includes(me);
+    const isSubscribed = subscriberIds.includes(me);
     const incoming = (req.user.friendRequestsIn || []).map((x) => x.toString());
     const outgoing = (req.user.friendRequestsOut || []).map((x) => x.toString());
+
+    const ONLINE_WINDOW_MS = 90 * 1000;
+    const online =
+      !!user.lastSeenAt && Date.now() - new Date(user.lastSeenAt).getTime() < ONLINE_WINDOW_MS;
 
     return res.json({
       user: {
@@ -69,12 +75,16 @@ router.get(
         avatarUrl: user.avatarUrl || '',
         banned: user.banned,
         createdAt: user.createdAt,
+        lastSeenAt: user.lastSeenAt || null,
+        online,
         friendsCount: friendIds.length,
+        subscribersCount: subscriberIds.length,
         developerGame,
       },
       relation: {
         isMe,
         isFriend,
+        isSubscribed,
         requestIncoming: incoming.includes(targetId),
         requestOutgoing: outgoing.includes(targetId),
       },
