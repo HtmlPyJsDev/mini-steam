@@ -18,6 +18,7 @@ const socialRoutes = require('./src/routes/socialRoutes');
 const uzisRoutes = require('./src/routes/uzisRoutes');
 const errorHandler = require('./src/middleware/errorHandler');
 const auth = require('./src/middleware/auth');
+const Game = require('./src/models/Game');
 
 const app = express();
 
@@ -57,9 +58,32 @@ app.use((req, res, next) => {
 
 app.use(errorHandler);
 
+// Idempotent: every game published before priceUzis existed gets the
+// default of 10 uzis. Games published after that already have an explicit
+// priceUzis (0 for free, 10 for paid) so this updateMany is a no-op for
+// them.
+async function backfillGamePrices() {
+  try {
+    const result = await Game.updateMany(
+      { priceUzis: { $exists: false } },
+      { $set: { priceUzis: 10 } }
+    );
+    if (result.modifiedCount > 0) {
+      // eslint-disable-next-line no-console
+      console.log(
+        `[mini-steam] Backfilled priceUzis=10 on ${result.modifiedCount} legacy games`
+      );
+    }
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.warn('[mini-steam] Failed to backfill game prices:', err.message);
+  }
+}
+
 (async () => {
   try {
     await connectDB();
+    await backfillGamePrices();
     app.listen(PORT, () => {
       // eslint-disable-next-line no-console
       console.log(`[mini-steam] Backend listening on port ${PORT}`);
