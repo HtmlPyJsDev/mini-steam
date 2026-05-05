@@ -3,10 +3,14 @@ const express = require('express');
 const RolePurchase = require('../models/RolePurchase');
 const auth = require('../middleware/auth');
 const asyncHandler = require('../utils/asyncHandler');
+const uzisService = require('../services/uzis');
 
 const router = express.Router();
 
 const TG_HANDLE = (process.env.SHOP_TELEGRAM_HANDLE || 'DevoloperUI').replace(/^@/, '');
+
+// 1 USD = 90 RUB rough peg used purely for display in the shop.
+const USD_TO_RUB = 90;
 
 const ROLES = [
   {
@@ -25,11 +29,23 @@ const ROLES = [
 
 const ROLE_RANK = { user: 0, developer: 1, security: 2, admin: 3 };
 
+function decorate(role) {
+  const usd = role.priceCents / 100;
+  const rub = Math.round(usd * USD_TO_RUB);
+  const uzis = uzisService.ROLE_COSTS[role.id] ?? null;
+  return {
+    ...role,
+    priceUsd: usd,
+    priceRub: rub,
+    priceUzis: uzis,
+  };
+}
+
 router.get(
   '/roles',
   asyncHandler(async (_req, res) => {
     return res.json({
-      roles: ROLES,
+      roles: ROLES.map(decorate),
       contact: {
         provider: 'telegram',
         handle: TG_HANDLE,

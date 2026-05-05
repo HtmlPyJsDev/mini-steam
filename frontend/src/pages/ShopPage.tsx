@@ -325,7 +325,7 @@ export function ShopPage() {
                   ⭐ {t('shop.earnReview').replace('{reward}', String(balance.reviewReward))}
                 </li>
                 <li>🏆 {t('shop.earnContest')}</li>
-                <li>👑 {t('shop.earnAdmin')}</li>
+                <li>🎁 {t('shop.welcomeBonus')}</li>
               </ul>
             </div>
           </section>
@@ -344,8 +344,11 @@ export function ShopPage() {
               const owned = userRank >= (ROLE_RANK[role.id] ?? 0);
               const pending = pendingRoles.has(role.id);
               const uzisCost =
+                role.priceUzis ??
                 balance?.roleCosts?.[role.id] ??
                 (role.id === 'developer' ? 500 : role.id === 'security' ? 1000 : 0);
+              const usdPrice = role.priceUsd ?? role.priceCents / 100;
+              const rubPrice = role.priceRub ?? Math.round(usdPrice * 90);
               const canAffordUzis = user && balance ? balance.uzis >= uzisCost : false;
               return (
                 <article key={role.id} className={`shop-card shop-card--${role.id}`}>
@@ -359,6 +362,16 @@ export function ShopPage() {
                     </span>
                   </div>
                   <h2 className="shop-card__title">{t(roleNameKey[role.id])}</h2>
+                  <div className="shop-card__triple" aria-label="price">
+                    <span className="shop-card__triple-part">${usdPrice}</span>
+                    <span className="shop-card__triple-sep">/</span>
+                    <span className="shop-card__triple-part">{rubPrice.toLocaleString()}₽</span>
+                    <span className="shop-card__triple-sep">/</span>
+                    <span className="shop-card__triple-part shop-card__triple-uzis">
+                      <span aria-hidden="true">⌬</span>
+                      {uzisCost.toLocaleString()}
+                    </span>
+                  </div>
                   <p className="shop-card__desc">{t(roleDescKey[role.id])}</p>
                   <ul className="shop-card__perks">
                     {role.perks.map((perk) => (

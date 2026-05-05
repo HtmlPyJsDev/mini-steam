@@ -198,6 +198,10 @@ router.delete(
   })
 );
 
+// Return a signed download URL only if the user actually has access
+// (game is free, the user is admin, the user uploaded it, or the user
+// has bought / already owns it). Otherwise respond 402 with the price
+// so the frontend can prompt the buy flow.
 const downloadHandler = asyncHandler(async (req, res) => {
   const game = await Game.findById(req.params.id);
   if (!game) {
@@ -207,10 +211,30 @@ const downloadHandler = asyncHandler(async (req, res) => {
     return res.status(404).json({ message: 'Game not found' });
   }
 
-  await User.updateOne(
-    { _id: req.user._id },
-    { $addToSet: { downloads: game._id } }
-  );
+  const me = await User.findById(req.user._id);
+  if (!me) return res.status(401).json({ message: 'Unauthorized' });
+
+  const meId = me._id.toString();
+  const owns = (me.downloads || []).some((d) => d.toString() === meId || d.toString() === game._id.toString());
+  const ownedAlready = (me.downloads || []).some((d) => d.toString() === game._id.toString());
+  const isUploader = game.uploaderId && game.uploaderId.toString() === meId;
+  const isAdmin = me.role === 'admin';
+  const isFree = !game.priceUzis || game.priceUzis === 0;
+
+  if (!isFree && !ownedAlready && !isUploader && !isAdmin) {
+    return res.status(402).json({
+      message: 'PAYMENT_REQUIRED',
+      code: 'PAYMENT_REQUIRED',
+      priceUzis: game.priceUzis,
+      yourBalance: me.uzis || 0,
+    });
+  }
+
+  if (!ownedAlready) {
+    me.downloads = [...(me.downloads || []), game._id];
+    await me.save();
+  }
+  void owns;
 
   const url = await getDownloadUrl(game.fileKey);
   return res.json({
@@ -221,6 +245,68 @@ const downloadHandler = asyncHandler(async (req, res) => {
     license: game.license,
   });
 });
+
+// Buy a paid game. Idempotent — buying a game you already own is a no-op
+// and just returns the current balance.
+router.post(
+  '/:id/buy',
+  auth,
+  asyncHandler(async (req, res) => {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid game id' });
+    }
+    const game = await Game.findById(req.params.id);
+    if (!game) return res.status(404).json({ message: 'Game not found' });
+    if (game.status && game.status !== 'approved') {
+      return res.status(404).json({ message: 'Game not found' });
+    }
+    const me = await User.findById(req.user._id);
+    if (!me) return res.status(401).json({ message: 'Unauthorized' });
+
+    const ownedAlready = (me.downloads || []).some((d) => d.toString() === game._id.toString());
+    const isUploader = game.uploaderId && game.uploaderId.toString() === me._id.toString();
+    const isAdmin = me.role === 'admin';
+    const price = Math.max(0, Number(game.priceUzis) || 0);
+
+    if (price === 0 || ownedAlready || isUploader || isAdmin) {
+      if (!ownedAlready) {
+        me.downloads = [...(me.downloads || []), game._id];
+        await me.save();
+      }
+      return res.json({
+        ok: true,
+        alreadyOwned: ownedAlready,
+        free: price === 0,
+        uzis: me.uzis || 0,
+      });
+    }
+
+    if ((me.uzis || 0) < price) {
+      return res.status(400).json({
+        message: 'INSUFFICIENT_UZIS',
+        code: 'INSUFFICIENT_UZIS',
+        need: price,
+        have: me.uzis || 0,
+      });
+    }
+
+    try {
+      await uzisService.debit(me, price, 'game_purchase', {
+        note: `Bought "${game.title}"`,
+        refId: game._id,
+      });
+    } catch (err) {
+      if (err && err.code === 'INSUFFICIENT_UZIS') {
+        return res.status(400).json({ message: 'INSUFFICIENT_UZIS', code: 'INSUFFICIENT_UZIS', need: price });
+      }
+      throw err;
+    }
+    me.downloads = [...(me.downloads || []), game._id];
+    await me.save();
+
+    return res.json({ ok: true, uzis: me.uzis || 0, gameId: game._id });
+  })
+);
 
 module.exports = router;
 module.exports.downloadHandler = downloadHandler;

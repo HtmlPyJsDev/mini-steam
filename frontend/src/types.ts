@@ -5,6 +5,9 @@ export interface ShopRole {
   priceCents: number;
   currency: string;
   perks: string[];
+  priceUsd?: number;
+  priceRub?: number;
+  priceUzis?: number;
 }
 
 export interface ShopContact {
@@ -90,6 +93,7 @@ export interface Game {
   status?: 'approved' | 'pending' | 'rejected';
   uploaderId?: PublicUser | string | null;
   gpuTier?: number;
+  priceUzis?: number;
   ratingAvg?: number;
   ratingCount?: number;
   createdAt?: string;

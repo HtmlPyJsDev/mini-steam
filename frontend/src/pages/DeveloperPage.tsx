@@ -33,6 +33,7 @@ export function DeveloperPage() {
   const [description, setDescription] = useState('');
   const [license, setLicense] = useState('');
   const [gpuTier, setGpuTier] = useState<number>(3);
+  const [priceUzis, setPriceUzis] = useState<number>(10);
   const [cover, setCover] = useState<File | null>(null);
   const [screenshots, setScreenshots] = useState<File[]>([]);
   const [gameFile, setGameFile] = useState<File | null>(null);
@@ -67,7 +68,7 @@ export function DeveloperPage() {
 
   useEffect(() => {
     if (!user) return;
-    if (user.role !== 'developer' && user.role !== 'admin') return;
+    if (user.role !== 'developer' && user.role !== 'security' && user.role !== 'admin') return;
     getDeveloperSlot()
       .then((res) => {
         setSlotUsed(res.slotUsed);
@@ -80,7 +81,7 @@ export function DeveloperPage() {
 
   if (!user) return null;
 
-  if (user.role !== 'developer' && user.role !== 'admin') {
+  if (user.role !== 'developer' && user.role !== 'security' && user.role !== 'admin') {
     return (
       <div className="container">
         <section className="settings paywall">
@@ -122,6 +123,7 @@ export function DeveloperPage() {
         description,
         license: license.trim(),
         gpuTier,
+        priceUzis,
         cover,
         screenshots,
         gameFileKey: resolved.key,
@@ -262,6 +264,33 @@ export function DeveloperPage() {
                 </select>
                 <small className="field__hint">{t('admin.gpuTierHint')}</small>
               </label>
+              <fieldset className="field">
+                <legend>{t('developer.priceLabel')}</legend>
+                <div className="price-radio">
+                  <label className={`price-radio__opt ${priceUzis === 0 ? 'is-active' : ''}`}>
+                    <input
+                      type="radio"
+                      name="priceUzis"
+                      value={0}
+                      checked={priceUzis === 0}
+                      onChange={() => setPriceUzis(0)}
+                    />
+                    <span className="price-radio__title">{t('developer.priceFree')}</span>
+                    <span className="price-radio__hint">{t('developer.priceFreeHint')}</span>
+                  </label>
+                  <label className={`price-radio__opt ${priceUzis === 10 ? 'is-active' : ''}`}>
+                    <input
+                      type="radio"
+                      name="priceUzis"
+                      value={10}
+                      checked={priceUzis === 10}
+                      onChange={() => setPriceUzis(10)}
+                    />
+                    <span className="price-radio__title">⌬10</span>
+                    <span className="price-radio__hint">{t('developer.pricePaidHint')}</span>
+                  </label>
+                </div>
+              </fieldset>
               <label className="field">
                 <span>{t('developer.coverImage')}</span>
                 <input type="file" accept="image/*" onChange={onCover} />

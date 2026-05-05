@@ -39,6 +39,18 @@ export function GameCard({ game, index = 0 }: GameCardProps) {
         )}
         <div className="game-card__cover-shade" aria-hidden="true" />
         <span className="game-card__license">{game.license}</span>
+        <span
+          className={`game-card__price ${game.priceUzis && game.priceUzis > 0 ? 'is-paid' : 'is-free'}`}
+        >
+          {game.priceUzis && game.priceUzis > 0 ? (
+            <>
+              <span aria-hidden="true">⌬</span>
+              {game.priceUzis}
+            </>
+          ) : (
+            'Free'
+          )}
+        </span>
         <span className="game-card__verified" title="Virus-free">
           <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
             <path

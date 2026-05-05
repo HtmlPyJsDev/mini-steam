@@ -30,6 +30,8 @@ const uzisLedgerSchema = new mongoose.Schema(
         'contest_prize',
         'contest_refund',
         'review_revoked',
+        'welcome_bonus',
+        'game_purchase',
       ],
     },
     note: {

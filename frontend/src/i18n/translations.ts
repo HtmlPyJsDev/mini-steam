@@ -77,6 +77,11 @@ export type TranslationKey =
   | 'game.preparingLink'
   | 'game.downloadFailed'
   | 'game.signInToDownload'
+  | 'game.owned'
+  | 'game.yourGame'
+  | 'game.buying'
+  | 'game.buyForUzis'
+  | 'game.notEnoughUzis'
   | 'game.screenshots'
   | 'game.about'
   | 'game.failed'
@@ -181,6 +186,10 @@ export type TranslationKey =
   | 'developer.statusRejected'
   | 'developer.notDeveloper'
   | 'developer.askAdmin'
+  | 'developer.priceLabel'
+  | 'developer.priceFree'
+  | 'developer.priceFreeHint'
+  | 'developer.pricePaidHint'
   | 'admin.tabsGames'
   | 'admin.tabsUsers'
   | 'admin.tabsPending'
@@ -288,7 +297,8 @@ export type TranslationKey =
   | 'shop.earnPresence'
   | 'shop.earnReview'
   | 'shop.earnContest'
-  | 'shop.earnAdmin'
+  | 'shop.priceTriple'
+  | 'shop.welcomeBonus'
   | 'shop.buyWithUzis'
   | 'shop.buyWithMoney'
   | 'shop.buying'
@@ -393,7 +403,7 @@ const en: Dict = {
   'auth.signInTitle': 'Welcome back',
   'auth.signInSubtitle': 'Sign in to download free games.',
   'auth.registerTitle': 'Create your account',
-  'auth.registerSubtitle': 'Free, no credit card required.',
+  'auth.registerSubtitle': 'Free, no credit card required. Get ⌬50 on us.',
   'auth.email': 'Email',
   'auth.password': 'Password',
   'auth.confirmPassword': 'Confirm password',
@@ -418,6 +428,11 @@ const en: Dict = {
   'game.preparingLink': 'Preparing link…',
   'game.downloadFailed': 'Download failed',
   'game.signInToDownload': 'Sign in to download this game.',
+  'game.owned': 'In your library',
+  'game.yourGame': 'Your game',
+  'game.buying': 'Buying…',
+  'game.buyForUzis': 'Buy for ⌬{price}',
+  'game.notEnoughUzis': "You don't have enough uzis. Earn more or get the welcome bonus.",
   'game.screenshots': 'Screenshots',
   'game.about': 'About',
   'game.failed': 'Failed to load game',
@@ -526,6 +541,10 @@ const en: Dict = {
   'developer.notDeveloper': 'Only developers can publish a game.',
   'developer.askAdmin':
     'Ask the admin to grant you the “developer” role to publish your own game.',
+  'developer.priceLabel': 'Price for players',
+  'developer.priceFree': 'Free',
+  'developer.priceFreeHint': 'Anyone can download for free',
+  'developer.pricePaidHint': 'Players pay 10 uzis to add this to their library',
   'admin.tabsGames': 'Games',
   'admin.tabsUsers': 'Users',
   'admin.tabsPending': 'Pending',
@@ -641,7 +660,8 @@ const en: Dict = {
   'shop.earnPresence': '+{reward} uzis every {minutes} min on the site (daily cap {cap})',
   'shop.earnReview': '+{reward} uzis for your first detailed review on a game (≥ 30 chars)',
   'shop.earnContest': 'Win a contest — admin awards the prize',
-  'shop.earnAdmin': 'Admin can grant uzis directly',
+  'shop.priceTriple': '${usd} / {rub}₽ / ⌬{uzis}',
+  'shop.welcomeBonus': 'Every new account starts with ⌬50 free',
   'shop.buyWithUzis': 'Buy with uzis',
   'shop.buyWithMoney': 'Pay via Telegram',
   'shop.buying': 'Buying…',
@@ -747,7 +767,7 @@ const ru: Dict = {
   'auth.signInTitle': 'С возвращением',
   'auth.signInSubtitle': 'Войдите, чтобы скачивать игры.',
   'auth.registerTitle': 'Создать аккаунт',
-  'auth.registerSubtitle': 'Бесплатно, без карты.',
+  'auth.registerSubtitle': 'Бесплатно, без карты. Подарим ⌬50 на старт.',
   'auth.email': 'Email',
   'auth.password': 'Пароль',
   'auth.confirmPassword': 'Подтвердите пароль',
@@ -772,6 +792,11 @@ const ru: Dict = {
   'game.preparingLink': 'Готовим ссылку…',
   'game.downloadFailed': 'Не удалось скачать',
   'game.signInToDownload': 'Войдите, чтобы скачать эту игру.',
+  'game.owned': 'В вашей библиотеке',
+  'game.yourGame': 'Ваша игра',
+  'game.buying': 'Покупаем…',
+  'game.buyForUzis': 'Купить за ⌬{price}',
+  'game.notEnoughUzis': 'Недостаточно uzis. Заработайте больше или получите стартовый бонус.',
   'game.screenshots': 'Скриншоты',
   'game.about': 'Об игре',
   'game.failed': 'Не удалось загрузить игру',
@@ -880,6 +905,10 @@ const ru: Dict = {
   'developer.notDeveloper': 'Только разработчики могут опубликовать игру.',
   'developer.askAdmin':
     'Попросите админа выдать вам роль «разработчик», чтобы опубликовать свою игру.',
+  'developer.priceLabel': 'Цена для игроков',
+  'developer.priceFree': 'Бесплатно',
+  'developer.priceFreeHint': 'Любой может скачать бесплатно',
+  'developer.pricePaidHint': 'Игроки платят 10 узисов и игра остаётся в их библиотеке',
   'admin.tabsGames': 'Игры',
   'admin.tabsUsers': 'Пользователи',
   'admin.tabsPending': 'На проверке',
@@ -995,7 +1024,8 @@ const ru: Dict = {
   'shop.earnPresence': '+{reward} uzis за каждые {minutes} мин на сайте (дневной кап {cap})',
   'shop.earnReview': '+{reward} uzis за первый развёрнутый отзыв на игру (от 30 символов)',
   'shop.earnContest': 'Победите в конкурсе — приз начисляет админ',
-  'shop.earnAdmin': 'Админ может выдать uzis напрямую',
+  'shop.priceTriple': '${usd} / {rub}₽ / ⌬{uzis}',
+  'shop.welcomeBonus': 'Каждому новому аккаунту бесплатно ⌬50 на старт',
   'shop.buyWithUzis': 'Купить за uzis',
   'shop.buyWithMoney': 'Оплатить через Telegram',
   'shop.buying': 'Покупаем…',
@@ -1102,7 +1132,7 @@ const uz: Dict = {
   'auth.signInTitle': 'Xush kelibsiz',
   'auth.signInSubtitle': "Bepul o'yinlarni yuklab olish uchun tizimga kiring.",
   'auth.registerTitle': 'Hisob yaratish',
-  'auth.registerSubtitle': 'Bepul, karta talab qilinmaydi.',
+  'auth.registerSubtitle': "Bepul, karta kerak emas. Sovg'aga ⌬50 olasiz.",
   'auth.email': 'Email',
   'auth.password': 'Parol',
   'auth.confirmPassword': 'Parolni tasdiqlang',
@@ -1127,6 +1157,11 @@ const uz: Dict = {
   'game.preparingLink': 'Havola tayyorlanmoqda…',
   'game.downloadFailed': "Yuklab bo'lmadi",
   'game.signInToDownload': "Bu o'yinni yuklab olish uchun tizimga kiring.",
+  'game.owned': 'Kutubxonangizda',
+  'game.yourGame': "Sizning o'yiningiz",
+  'game.buying': 'Sotib olinmoqda…',
+  'game.buyForUzis': 'Sotib olish: ⌬{price}',
+  'game.notEnoughUzis': "Uzis yetarli emas. Ko'proq topib oling yoki sovg'a oling.",
   'game.screenshots': 'Skrinshotlar',
   'game.about': "O'yin haqida",
   'game.failed': "O'yinni yuklab bo'lmadi",
@@ -1235,6 +1270,10 @@ const uz: Dict = {
   'developer.notDeveloper': "Faqat dasturchilar o'yin chiqara oladi.",
   'developer.askAdmin':
     "O'z o'yiningizni chiqarish uchun admindan «dasturchi» rolini berishni so'rang.",
+  'developer.priceLabel': "O'yinchilar uchun narx",
+  'developer.priceFree': 'Bepul',
+  'developer.priceFreeHint': 'Hamma bepul yuklab olishi mumkin',
+  'developer.pricePaidHint': "O'yinchilar 10 uzis to'lab kutubxonasiga qo'shadi",
   'admin.tabsGames': "O'yinlar",
   'admin.tabsUsers': 'Foydalanuvchilar',
   'admin.tabsPending': 'Tekshiruvda',
@@ -1351,7 +1390,8 @@ const uz: Dict = {
   'shop.earnPresence': "Saytda har {minutes} daqiqa uchun +{reward} uzis (kunlik chegara: {cap})",
   'shop.earnReview': "Bir o'yin uchun birinchi batafsil sharhga +{reward} uzis (≥ 30 belgi)",
   'shop.earnContest': "Tanlovda g'olib bo'ling — sovrinni admin beradi",
-  'shop.earnAdmin': "Admin to'g'ridan-to'g'ri uzis berishi mumkin",
+  'shop.priceTriple': '${usd} / {rub}₽ / ⌬{uzis}',
+  'shop.welcomeBonus': "Har bir yangi hisob ⌬50 sovg'a oladi",
   'shop.buyWithUzis': 'Uzis evaziga sotib olish',
   'shop.buyWithMoney': "Telegram orqali to'lash",
   'shop.buying': 'Sotib olinmoqda…',

@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { getGame, requestDownload } from '../api/games';
+import { getGame, requestDownload, buyGame } from '../api/games';
 import { listGameUpdates } from '../api/social';
 import type { DevUpdate, Game } from '../types';
 import { Loader } from '../components/Loader';
@@ -25,13 +25,31 @@ function formatBytes(bytes: number): string {
 
 export function GamePage() {
   const { id } = useParams<{ id: string }>();
-  const { user } = useAuth();
+  const { user, refresh } = useAuth();
   const { t } = useTranslation();
   const [game, setGame] = useState<Game | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [activeShot, setActiveShot] = useState<string | null>(null);
   const [downloading, setDownloading] = useState<boolean>(false);
+  const [buying, setBuying] = useState<boolean>(false);
   const [updates, setUpdates] = useState<DevUpdate[]>([]);
+
+  const ownership = useMemo(() => {
+    if (!user || !game) {
+      return { owned: false, isAuthor: false, isAdmin: false, isPaid: false };
+    }
+    const ownedIds = (user.downloads || []).map((d) => (typeof d === 'string' ? d : d._id));
+    const owned = ownedIds.includes(game._id);
+    const uploader = game.uploaderId;
+    const uploaderId =
+      typeof uploader === 'string' ? uploader : uploader?._id ?? null;
+    return {
+      owned,
+      isAuthor: uploaderId === user._id,
+      isAdmin: user.role === 'admin',
+      isPaid: !!(game.priceUzis && game.priceUzis > 0),
+    };
+  }, [user, game]);
 
   useEffect(() => {
     if (!id) return;
@@ -65,10 +83,30 @@ export function GamePage() {
     try {
       const res = await requestDownload(id);
       window.open(res.url, '_blank', 'noopener,noreferrer');
+      void refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : t('game.downloadFailed'));
     } finally {
       setDownloading(false);
+    }
+  }
+
+  async function handleBuy() {
+    if (!id) return;
+    setBuying(true);
+    setError(null);
+    try {
+      await buyGame(id);
+      await refresh();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : t('common.error');
+      if (msg.includes('INSUFFICIENT_UZIS')) {
+        setError(t('game.notEnoughUzis'));
+      } else {
+        setError(msg);
+      }
+    } finally {
+      setBuying(false);
     }
   }
 
@@ -110,14 +148,47 @@ export function GamePage() {
             </dl>
 
             {user ? (
-              <button
-                type="button"
-                className="btn btn--primary btn--large"
-                onClick={handleDownload}
-                disabled={downloading}
-              >
-                {downloading ? t('game.preparingLink') : t('game.download')}
-              </button>
+              <div className="game-detail__actions">
+                <div className="game-detail__price-row">
+                  {ownership.isPaid ? (
+                    <span className="game-detail__price game-detail__price--paid">
+                      <span aria-hidden="true">⌬</span>
+                      {game.priceUzis}
+                    </span>
+                  ) : (
+                    <span className="game-detail__price game-detail__price--free">
+                      {t('developer.priceFree')}
+                    </span>
+                  )}
+                  {ownership.owned ? (
+                    <span className="owned-badge">✓ {t('game.owned')}</span>
+                  ) : null}
+                  {ownership.isAuthor ? (
+                    <span className="owned-badge owned-badge--author">★ {t('game.yourGame')}</span>
+                  ) : null}
+                </div>
+                {ownership.isPaid && !ownership.owned && !ownership.isAuthor && !ownership.isAdmin ? (
+                  <button
+                    type="button"
+                    className="btn btn--primary btn--large"
+                    onClick={handleBuy}
+                    disabled={buying}
+                  >
+                    {buying
+                      ? t('game.buying')
+                      : `${t('game.buyForUzis').replace('{price}', String(game.priceUzis))}`}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="btn btn--primary btn--large"
+                    onClick={handleDownload}
+                    disabled={downloading}
+                  >
+                    {downloading ? t('game.preparingLink') : t('game.download')}
+                  </button>
+                )}
+              </div>
             ) : (
               <div className="auth-cta">
                 <p>{t('game.signInToDownload')}</p>

@@ -54,6 +54,11 @@ const gameSchema = new mongoose.Schema(
       max: 5,
       default: 0,
     },
+    priceUzis: {
+      type: Number,
+      min: 0,
+      default: 10,
+    },
   },
   { timestamps: true }
 );

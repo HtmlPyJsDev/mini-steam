@@ -31,6 +31,7 @@ export interface CreateDeveloperGamePayload {
   description: string;
   license: string;
   gpuTier?: number;
+  priceUzis?: number;
   cover: File;
   screenshots: File[];
   gameFileKey: string;
@@ -44,6 +45,7 @@ export async function createDeveloperGame(p: CreateDeveloperGamePayload): Promis
   fd.append('description', p.description);
   fd.append('license', p.license);
   if (typeof p.gpuTier === 'number') fd.append('gpuTier', String(p.gpuTier));
+  if (typeof p.priceUzis === 'number') fd.append('priceUzis', String(p.priceUzis));
   fd.append('gameFileKey', p.gameFileKey);
   fd.append('gameFileUrl', p.gameFileUrl);
   fd.append('gameFileSize', String(p.gameFileSize));

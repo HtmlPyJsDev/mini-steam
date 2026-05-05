@@ -21,7 +21,7 @@ const router = express.Router();
 
 const GAME_FILE_EXTENSIONS = /\.(zip|rar|7z|tar|gz|tgz|exe|msi|appimage|dmg|deb|pkg|iso)$/i;
 
-router.use(auth, roleGuard('developer', 'admin'));
+router.use(auth, roleGuard('developer', 'security', 'admin'));
 
 router.get(
   '/me',
@@ -218,6 +218,15 @@ router.post(
       if (Number.isFinite(t) && t >= 0 && t <= 5) gpuTier = t;
     }
 
+    // Authors choose Free (0) or paid (10 uzis). Anything else is normalised to 10.
+    const priceUzisRaw = req.body.priceUzis;
+    let priceUzis = 10;
+    if (priceUzisRaw !== undefined && priceUzisRaw !== '') {
+      const p = Math.round(Number(priceUzisRaw));
+      if (Number.isFinite(p) && p === 0) priceUzis = 0;
+      else priceUzis = 10;
+    }
+
     const game = await Game.create({
       title: String(req.body.title).trim(),
       description: String(req.body.description),
@@ -230,6 +239,7 @@ router.post(
       uploaderId: req.user._id,
       status: req.user.role === 'admin' ? 'approved' : 'pending',
       gpuTier,
+      priceUzis,
     });
 
     await User.updateOne({ _id: req.user._id }, { $set: { developerGameId: game._id } });

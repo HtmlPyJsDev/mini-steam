@@ -2,10 +2,39 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 
 const User = require('../models/User');
+const UzisLedger = require('../models/UzisLedger');
 const auth = require('../middleware/auth');
 const asyncHandler = require('../utils/asyncHandler');
 const createToken = require('../utils/createToken');
 const { verifyCaptcha } = require('../utils/captcha');
+
+const WELCOME_BONUS = 50;
+
+// One-shot bonus for both fresh registrations and existing accounts that
+// pre-date the uzis economy. Mutates and saves the user.
+async function ensureWelcomeBonus(user) {
+  if (user.welcomeBonusGranted) return;
+  const before = user.uzis || 0;
+  // For existing accounts with zero balance: top up to WELCOME_BONUS.
+  // For brand-new accounts the schema default already gave them 50 — we
+  // just need to log it and flip the flag.
+  let delta = 0;
+  if (before < WELCOME_BONUS) {
+    delta = WELCOME_BONUS - before;
+    user.uzis = WELCOME_BONUS;
+  }
+  user.welcomeBonusGranted = true;
+  await user.save();
+  if (delta > 0 || before === WELCOME_BONUS) {
+    await UzisLedger.create({
+      userId: user._id,
+      delta: delta > 0 ? delta : WELCOME_BONUS,
+      balanceAfter: user.uzis,
+      reason: 'welcome_bonus',
+      note: 'Welcome bonus on first sign-in',
+    });
+  }
+}
 
 const router = express.Router();
 
@@ -41,6 +70,7 @@ router.post(
       password: hash,
       role: 'user',
     });
+    await ensureWelcomeBonus(user);
 
     const token = createToken(user);
     return res.status(201).json({ token, user: user.toSafeJSON() });
@@ -74,6 +104,8 @@ router.post(
       });
     }
 
+    await ensureWelcomeBonus(user);
+
     const token = createToken(user);
     return res.json({ token, user: user.toSafeJSON() });
   })
@@ -89,6 +121,7 @@ router.get(
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
+    await ensureWelcomeBonus(user);
     return res.json({ user });
   })
 );

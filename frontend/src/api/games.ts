@@ -12,3 +12,18 @@ export function getGame(id: string): Promise<{ game: Game }> {
 export function requestDownload(id: string): Promise<DownloadResponse> {
   return apiRequest<DownloadResponse>(`/download/${id}`, { auth: true });
 }
+
+export interface BuyGameResponse {
+  ok: true;
+  uzis: number;
+  alreadyOwned?: boolean;
+  free?: boolean;
+  gameId?: string;
+}
+
+export function buyGame(id: string): Promise<BuyGameResponse> {
+  return apiRequest<BuyGameResponse>(`/games/${id}/buy`, {
+    method: 'POST',
+    auth: true,
+  });
+}
