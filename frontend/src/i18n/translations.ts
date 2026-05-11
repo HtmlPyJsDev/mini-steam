@@ -66,6 +66,11 @@ export type TranslationKey =
   | 'auth.passwordTooShort'
   | 'auth.loginFailed'
   | 'auth.registrationFailed'
+  | 'auth.or'
+  | 'auth.signInWithGithub'
+  | 'auth.oauthError'
+  | 'auth.emailExists'
+  | 'auth.banned'
   | 'captcha.label'
   | 'captcha.placeholder'
   | 'captcha.refresh'
@@ -417,6 +422,11 @@ const en: Dict = {
   'auth.passwordTooShort': 'Password must be at least 6 characters',
   'auth.loginFailed': 'Login failed',
   'auth.registrationFailed': 'Registration failed',
+  'auth.or': 'or',
+  'auth.signInWithGithub': 'Sign in with GitHub',
+  'auth.oauthError': 'OAuth login failed',
+  'auth.emailExists': 'Account with this email already exists',
+  'auth.banned': 'Account is banned',
   'captcha.label': 'Type the characters you see',
   'captcha.placeholder': 'Captcha code',
   'captcha.refresh': 'Refresh captcha',
@@ -781,6 +791,11 @@ const ru: Dict = {
   'auth.passwordTooShort': 'Пароль должен быть не короче 6 символов',
   'auth.loginFailed': 'Не удалось войти',
   'auth.registrationFailed': 'Не удалось зарегистрироваться',
+  'auth.or': 'или',
+  'auth.signInWithGithub': 'Войти через GitHub',
+  'auth.oauthError': 'Ошибка входа через OAuth',
+  'auth.emailExists': 'Аккаунт с таким email уже существует',
+  'auth.banned': 'Аккаунт заблокирован',
   'captcha.label': 'Введите символы с картинки',
   'captcha.placeholder': 'Код с картинки',
   'captcha.refresh': 'Обновить капчу',
@@ -1146,6 +1161,11 @@ const uz: Dict = {
   'auth.passwordTooShort': "Parol kamida 6 ta belgidan iborat bo'lishi kerak",
   'auth.loginFailed': "Kirib bo'lmadi",
   'auth.registrationFailed': "Ro'yxatdan o'tib bo'lmadi",
+  'auth.or': 'yoki',
+  'auth.signInWithGithub': 'GitHub orqali kirish',
+  'auth.oauthError': 'OAuth bilan kirish xatosi',
+  'auth.emailExists': 'Bunday email bilan hisob mavjud',
+  'auth.banned': 'Hisob bloklangan',
   'captcha.label': "Rasmda ko'rgan belgilarni kiriting",
   'captcha.placeholder': 'Kapcha kodi',
   'captcha.refresh': 'Kapchani yangilash',

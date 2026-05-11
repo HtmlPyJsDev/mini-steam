@@ -1,5 +1,6 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
+const axios = require('axios');
 
 const User = require('../models/User');
 const UzisLedger = require('../models/UzisLedger');
@@ -7,6 +8,10 @@ const auth = require('../middleware/auth');
 const asyncHandler = require('../utils/asyncHandler');
 const createToken = require('../utils/createToken');
 const { verifyCaptcha } = require('../utils/captcha');
+
+const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID;
+const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET;
+const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
 
 const WELCOME_BONUS = 50;
 
@@ -123,6 +128,73 @@ router.get(
     }
     await ensureWelcomeBonus(user);
     return res.json({ user });
+  })
+);
+
+router.get('/github', (req, res) => {
+  if (!GITHUB_CLIENT_ID || !GITHUB_CLIENT_SECRET) {
+    return res.status(500).json({ message: 'GitHub OAuth not configured' });
+  }
+  const scope = 'read:user';
+  const redirectUri = `${req.protocol}://${req.get('host')}/api/auth/github/callback`;
+  const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}`;
+  res.redirect(githubAuthUrl);
+});
+
+router.get(
+  '/github/callback',
+  asyncHandler(async (req, res) => {
+    const { code } = req.query;
+    if (!code) {
+      return res.redirect(`${CLIENT_URL}/login?error=no_code`);
+    }
+
+    const tokenResponse = await axios.post(
+      'https://github.com/login/oauth/access_token',
+      {
+        client_id: GITHUB_CLIENT_ID,
+        client_secret: GITHUB_CLIENT_SECRET,
+        code,
+      },
+      { headers: { Accept: 'application/json' } }
+    );
+
+    const { access_token } = tokenResponse.data;
+    if (!access_token) {
+      return res.redirect(`${CLIENT_URL}/login?error=no_token`);
+    }
+
+    const userResponse = await axios.get('https://api.github.com/user', {
+      headers: { Authorization: `Bearer ${access_token}` },
+    });
+
+    const { id: githubId, login, avatar_url } = userResponse.data;
+
+    let user = await User.findOne({ githubId });
+    if (!user) {
+      const existingEmail = await User.findOne({ email: `${login}@github.local` });
+      if (existingEmail) {
+        return res.redirect(`${CLIENT_URL}/login?error=email_exists`);
+      }
+
+      user = await User.create({
+        email: `${login}@github.local`,
+        password: null,
+        provider: 'github',
+        githubId: String(githubId),
+        displayName: login,
+        avatarUrl: avatar_url,
+        role: 'user',
+      });
+      await ensureWelcomeBonus(user);
+    }
+
+    if (user.banned) {
+      return res.redirect(`${CLIENT_URL}/login?error=banned`);
+    }
+
+    const token = createToken(user);
+    res.redirect(`${CLIENT_URL}/auth/github/callback?token=${token}`);
   })
 );
 
