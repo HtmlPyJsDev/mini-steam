@@ -519,6 +519,16 @@ p {
   background: #2f363d;
 }
 
+.btn--google {
+  background: #4285f4;
+  color: #fff;
+  margin-top: 10px;
+}
+
+.btn--google:hover {
+  background: #3367d6;
+}
+
 .field {
   display: block;
   margin-bottom: 14px;

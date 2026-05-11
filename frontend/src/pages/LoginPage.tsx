@@ -38,6 +38,11 @@ export function LoginPage() {
     window.location.href = `${apiUrl}/auth/github`;
   };
 
+  const handleGoogleLogin = () => {
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+    window.location.href = `${apiUrl}/auth/google`;
+  };
+
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
@@ -97,6 +102,14 @@ export function LoginPage() {
           onClick={handleGithubLogin}
         >
           {t('auth.signInWithGithub')}
+        </button>
+
+        <button
+          type="button"
+          className="btn btn--google btn--block"
+          onClick={handleGoogleLogin}
+        >
+          {t('auth.signInWithGoogle')}
         </button>
 
         <p className="auth-card__alt">

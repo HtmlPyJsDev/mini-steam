@@ -11,6 +11,8 @@ const { verifyCaptcha } = require('../utils/captcha');
 
 const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID;
 const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET;
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
 
 const WELCOME_BONUS = 50;
@@ -195,6 +197,78 @@ router.get(
 
     const token = createToken(user);
     res.redirect(`${CLIENT_URL}/auth/github/callback?token=${token}`);
+  })
+);
+
+router.get('/google', (req, res) => {
+  if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
+    return res.status(500).json({ message: 'Google OAuth not configured' });
+  }
+  const redirectUri = `${req.protocol}://${req.get('host')}/api/auth/google/callback`;
+  const scope = 'openid profile email';
+  const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scope)}&state=${encodeURIComponent(req.query.redirect || '')}`;
+  res.redirect(googleAuthUrl);
+});
+
+router.get(
+  '/google/callback',
+  asyncHandler(async (req, res) => {
+    const { code } = req.query;
+    if (!code) {
+      return res.redirect(`${CLIENT_URL}/login?error=no_code`);
+    }
+
+    const redirectUri = `${req.protocol}://${req.get('host')}/api/auth/google/callback`;
+
+    const tokenResponse = await axios.post(
+      'https://oauth2.googleapis.com/token',
+      {
+        client_id: GOOGLE_CLIENT_ID,
+        client_secret: GOOGLE_CLIENT_SECRET,
+        code,
+        grant_type: 'authorization_code',
+        redirect_uri: redirectUri,
+      },
+      { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+    );
+
+    const { access_token } = tokenResponse.data;
+    if (!access_token) {
+      return res.redirect(`${CLIENT_URL}/login?error=no_token`);
+    }
+
+    const userResponse = await axios.get('https://www.googleapis.com/oauth2/v2/userinfo', {
+      headers: { Authorization: `Bearer ${access_token}` },
+    });
+
+    const { id: googleId, email, picture } = userResponse.data;
+
+    let user = await User.findOne({ googleId });
+    if (!user) {
+      const existingEmail = await User.findOne({ email });
+      if (existingEmail) {
+        return res.redirect(`${CLIENT_URL}/login?error=email_exists`);
+      }
+
+      const displayName = email.split('@')[0];
+      user = await User.create({
+        email,
+        password: null,
+        provider: 'google',
+        googleId: String(googleId),
+        displayName,
+        avatarUrl: picture || '',
+        role: 'user',
+      });
+      await ensureWelcomeBonus(user);
+    }
+
+    if (user.banned) {
+      return res.redirect(`${CLIENT_URL}/login?error=banned`);
+    }
+
+    const token = createToken(user);
+    res.redirect(`${CLIENT_URL}/auth/google/callback?token=${token}`);
   })
 );
 

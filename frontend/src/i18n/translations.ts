@@ -68,6 +68,7 @@ export type TranslationKey =
   | 'auth.registrationFailed'
   | 'auth.or'
   | 'auth.signInWithGithub'
+  | 'auth.signInWithGoogle'
   | 'auth.oauthError'
   | 'auth.emailExists'
   | 'auth.banned'
@@ -424,6 +425,7 @@ const en: Dict = {
   'auth.registrationFailed': 'Registration failed',
   'auth.or': 'or',
   'auth.signInWithGithub': 'Sign in with GitHub',
+  'auth.signInWithGoogle': 'Sign in with Google',
   'auth.oauthError': 'OAuth login failed',
   'auth.emailExists': 'Account with this email already exists',
   'auth.banned': 'Account is banned',
@@ -793,6 +795,7 @@ const ru: Dict = {
   'auth.registrationFailed': 'Не удалось зарегистрироваться',
   'auth.or': 'или',
   'auth.signInWithGithub': 'Войти через GitHub',
+  'auth.signInWithGoogle': 'Войти через Google',
   'auth.oauthError': 'Ошибка входа через OAuth',
   'auth.emailExists': 'Аккаунт с таким email уже существует',
   'auth.banned': 'Аккаунт заблокирован',
@@ -1163,6 +1166,7 @@ const uz: Dict = {
   'auth.registrationFailed': "Ro'yxatdan o'tib bo'lmadi",
   'auth.or': 'yoki',
   'auth.signInWithGithub': 'GitHub orqali kirish',
+  'auth.signInWithGoogle': 'Google orqali kirish',
   'auth.oauthError': 'OAuth bilan kirish xatosi',
   'auth.emailExists': 'Bunday email bilan hisob mavjud',
   'auth.banned': 'Hisob bloklangan',
